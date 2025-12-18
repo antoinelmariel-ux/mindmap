@@ -31,11 +31,22 @@
       <button id="fit-map" class="ghost" aria-label="Adapter à l'écran">Ajuster</button>
       <div id="zoom-value" class="zoom-value">80%</div>
     </div>
+
+    <div class="note-helper" aria-live="polite">
+      <div class="helper-title">Prise de notes en direct</div>
+      <div id="current-selection" class="current-selection">Sélection : Objectif</div>
+      <div class="helper-actions">
+        <button id="add-sibling" type="button">Ajouter au même niveau (Entrée)</button>
+        <button id="add-child" type="button">Ajouter un enfant (Tab)</button>
+        <button id="delete-branch" type="button" class="danger">Supprimer la branche (Suppr)</button>
+      </div>
+      <div class="hint">Astuce : Alt + Entrée pour insérer un retour à la ligne dans une note.</div>
+    </div>
   </main>
 
   <footer class="footer">
     <div>Outil Mindmap Impact Mapping</div>
-    <div class="version">Version 1.3.1</div>
+    <div class="version">Version 1.3.2</div>
   </footer>
 
   <script src="script.js"></script>

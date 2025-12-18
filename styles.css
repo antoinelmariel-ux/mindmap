@@ -208,6 +208,79 @@ body {
   color: #4b5563;
 }
 
+.note-helper {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  max-width: 320px;
+  background: #0b172a;
+  color: #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 6;
+}
+
+.note-helper .helper-title {
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.note-helper .current-selection {
+  font-size: 13px;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.note-helper .helper-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.note-helper .helper-actions button {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease, border-color 0.2s ease;
+  text-align: left;
+}
+
+.note-helper .helper-actions button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.note-helper .helper-actions button:active {
+  transform: translateY(1px);
+}
+
+.note-helper .helper-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.note-helper .helper-actions .danger {
+  border-color: rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.08);
+  color: #fecdd3;
+}
+
+.note-helper .hint {
+  font-size: 12px;
+  color: #cbd5e1;
+  opacity: 0.85;
+}
+
 .footer {
   display: flex;
   justify-content: space-between;
@@ -228,5 +301,11 @@ body {
   .map-wrapper {
     width: 1600px;
     height: 1200px;
+  }
+
+  .note-helper {
+    position: static;
+    max-width: none;
+    margin: 16px;
   }
 }
