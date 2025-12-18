@@ -94,24 +94,50 @@ function renderNodes() {
     el.appendChild(badge);
 
     const title = document.createElement('div');
+    title.className = 'node-text';
+    title.contentEditable = 'true';
     title.textContent = node.text;
+    title.addEventListener('focus', () => {
+      selectedId = node.id;
+      updateSelection();
+    });
+    title.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        title.blur();
+      }
+    });
+    title.addEventListener('blur', () => {
+      updateNodeText(node.id, title.textContent || '');
+    });
+
     el.appendChild(title);
 
     el.addEventListener('click', () => {
       selectedId = node.id;
-      render();
+      updateSelection();
+      centerOnNode(node.id);
+      title.focus({ preventScroll: true });
     });
 
     nodesContainer.appendChild(el);
   });
 }
 
+function updateSelection() {
+  document.querySelectorAll('.node').forEach((n) => n.classList.remove('selected'));
+  const selectedEl = document.querySelector(`.node[data-id="${selectedId}"]`);
+  if (selectedEl) {
+    selectedEl.classList.add('selected');
+  }
+}
+
 function bezierPath(from, to) {
-  const distance = (to.x - from.x) * 0.6;
+  const distance = (to.x - from.x) * 0.35;
   const c1x = from.x + distance;
-  const c1y = from.y;
+  const c1y = from.y + 10;
   const c2x = to.x - distance;
-  const c2y = to.y;
+  const c2y = to.y - 10;
   return `M ${from.x + 180} ${from.y + 32} C ${c1x + 180} ${c1y + 32}, ${c2x - 8} ${c2y + 32}, ${to.x - 12} ${to.y + 32}`;
 }
 
@@ -138,6 +164,7 @@ function render() {
   renderNodes();
   renderConnections();
   applyZoom();
+  updateSelection();
 }
 
 function createNode({ column, parentId }) {
@@ -152,6 +179,10 @@ function createNode({ column, parentId }) {
 }
 
 function handleKeydown(e) {
+  const active = document.activeElement;
+  if (active?.isContentEditable) {
+    return;
+  }
   if (!selectedId) return;
   const current = nodes.find((n) => n.id === selectedId);
   if (!current) return;
@@ -165,6 +196,9 @@ function handleKeydown(e) {
     if (nextColumn < columns.length) {
       createNode({ column: nextColumn, parentId: current.id });
     }
+  } else if (e.key === 'Delete') {
+    e.preventDefault();
+    deleteNodeTree(current.id);
   }
 }
 
@@ -194,6 +228,33 @@ function centerOnNode(id) {
   const targetX = pos.x * zoom - workspace.clientWidth / 2 + 90;
   const targetY = pos.y * zoom - workspace.clientHeight / 2 + 80;
   workspace.scrollTo({ left: targetX, top: targetY, behavior: 'smooth' });
+}
+
+function updateNodeText(id, text) {
+  const node = nodes.find((n) => n.id === id);
+  if (!node) return;
+  node.text = text.trim() || columns[node.column].placeholder;
+}
+
+function deleteNodeTree(id) {
+  const idsToRemove = new Set();
+  const targetNode = nodes.find((n) => n.id === id);
+  function collect(targetId) {
+    idsToRemove.add(targetId);
+    nodes.filter((n) => n.parentId === targetId).forEach((child) => collect(child.id));
+  }
+  collect(id);
+  nodes = nodes.filter((n) => !idsToRemove.has(n.id));
+  if (!nodes.length) {
+    selectedId = null;
+  } else {
+    const parentId = targetNode?.parentId || null;
+    selectedId = nodes.find((n) => n.id === parentId)?.id || nodes[0].id;
+  }
+  render();
+  if (selectedId) {
+    centerOnNode(selectedId);
+  }
 }
 
 function fitToScreen() {
