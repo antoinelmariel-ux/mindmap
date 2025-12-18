@@ -179,7 +179,7 @@ function createNode({ column, parentId }) {
 
 function handleKeydown(e) {
   const active = document.activeElement;
-  if (active?.isContentEditable) {
+  if (active?.isContentEditable && e.key !== 'Delete') {
     return;
   }
   if (!selectedId) return;
