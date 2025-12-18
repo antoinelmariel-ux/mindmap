@@ -103,6 +103,11 @@ function renderNodes() {
     });
     title.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
+        if (e.altKey) {
+          e.preventDefault();
+          document.execCommand('insertLineBreak');
+          return;
+        }
         e.preventDefault();
         title.blur();
       }
