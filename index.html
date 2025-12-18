@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Impact Mapping</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Impact Mapping</div>
+    <div class="legend">
+      <span class="legend-item objective">Objectif</span>
+      <span class="legend-item tier">Tiers</span>
+      <span class="legend-item moyen">Moyen</span>
+      <span class="legend-item controle">Contrôle</span>
+      <span class="legend-item limite">Limite</span>
+      <span class="legend-item proba">Proba</span>
+    </div>
+  </header>
+
+  <main class="workspace" id="workspace">
+    <div class="map-wrapper" id="map-wrapper">
+      <svg id="connections" class="connections" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="nodes" class="nodes"></div>
+    </div>
+    <div class="zoom-panel" aria-label="Contrôles de zoom">
+      <button id="zoom-out" aria-label="Dézoomer">-</button>
+      <input id="zoom-range" type="range" min="40" max="150" step="5" value="80" aria-label="Zoom" />
+      <button id="zoom-in" aria-label="Zoomer">+</button>
+      <button id="fit-map" class="ghost" aria-label="Adapter à l'écran">Ajuster</button>
+      <div id="zoom-value" class="zoom-value">80%</div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div>Outil Mindmap Impact Mapping</div>
+    <div class="version">Version 1.0.0</div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
