@@ -33,6 +33,10 @@ const zoomValue = document.getElementById('zoom-value');
 const zoomOutBtn = document.getElementById('zoom-out');
 const zoomInBtn = document.getElementById('zoom-in');
 const fitBtn = document.getElementById('fit-map');
+const selectionLabel = document.getElementById('current-selection');
+const addSiblingBtn = document.getElementById('add-sibling');
+const addChildBtn = document.getElementById('add-child');
+const deleteBranchBtn = document.getElementById('delete-branch');
 
 let positions = new Map();
 
@@ -135,6 +139,7 @@ function updateSelection() {
   if (selectedEl) {
     selectedEl.classList.add('selected');
   }
+  updateHelperPanel();
 }
 
 function elbowPath(from, to) {
@@ -169,6 +174,16 @@ function render() {
   renderConnections();
   applyZoom();
   updateSelection();
+}
+
+function updateHelperPanel() {
+  const current = nodes.find((n) => n.id === selectedId);
+  const hasSelection = Boolean(current);
+  const canCreateChild = hasSelection && current.column + 1 < columns.length;
+  selectionLabel.textContent = `Sélection : ${hasSelection ? current.text : 'Aucune'}`;
+  addSiblingBtn.disabled = !hasSelection;
+  addChildBtn.disabled = !canCreateChild;
+  deleteBranchBtn.disabled = !hasSelection;
 }
 
 function createNode({ column, parentId }) {
@@ -208,6 +223,30 @@ function handleKeydown(e) {
 
 document.addEventListener('keydown', handleKeydown);
 
+function addSiblingNode() {
+  const current = nodes.find((n) => n.id === selectedId);
+  if (!current) return;
+  createNode({ column: current.column, parentId: current.parentId });
+}
+
+function addChildNode() {
+  const current = nodes.find((n) => n.id === selectedId);
+  if (!current) return;
+  const nextColumn = current.column + 1;
+  if (nextColumn >= columns.length) return;
+  createNode({ column: nextColumn, parentId: current.id });
+}
+
+function deleteSelectedBranch() {
+  const current = nodes.find((n) => n.id === selectedId);
+  if (!current) return;
+  deleteNodeTree(current.id);
+}
+
+addSiblingBtn.addEventListener('click', addSiblingNode);
+addChildBtn.addEventListener('click', addChildNode);
+deleteBranchBtn.addEventListener('click', deleteSelectedBranch);
+
 function applyZoom() {
   mapWrapper.style.transform = `scale(${zoom})`;
   zoomRange.value = Math.round(zoom * 100);
@@ -240,6 +279,7 @@ function updateNodeText(id, text) {
   const node = nodes.find((n) => n.id === id);
   if (!node) return;
   node.text = text.trim() || columns[node.column].placeholder;
+  updateHelperPanel();
 }
 
 function deleteNodeTree(id) {
