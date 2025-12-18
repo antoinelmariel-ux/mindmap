@@ -23,7 +23,7 @@ let nodes = [
 let selectedId = nodes[0].id;
 let zoom = 0.8;
 const columnSpacing = 260;
-const rowSpacing = 120;
+const rowSpacing = 140;
 const mapWrapper = document.getElementById('map-wrapper');
 const nodesContainer = document.getElementById('nodes');
 const connectionsSvg = document.getElementById('connections');
@@ -132,13 +132,12 @@ function updateSelection() {
   }
 }
 
-function bezierPath(from, to) {
-  const distance = (to.x - from.x) * 0.35;
-  const c1x = from.x + distance;
-  const c1y = from.y + 10;
-  const c2x = to.x - distance;
-  const c2y = to.y - 10;
-  return `M ${from.x + 180} ${from.y + 32} C ${c1x + 180} ${c1y + 32}, ${c2x - 8} ${c2y + 32}, ${to.x - 12} ${to.y + 32}`;
+function elbowPath(from, to) {
+  const startX = from.x + 180;
+  const startY = from.y + 32;
+  const endX = to.x - 12;
+  const endY = to.y + 32;
+  return `M ${startX} ${startY} L ${endX} ${startY} L ${endX} ${endY}`;
 }
 
 function renderConnections() {
@@ -153,7 +152,7 @@ function renderConnections() {
     const to = positions.get(node.id);
     if (!from || !to) return;
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', bezierPath(from, to));
+    path.setAttribute('d', elbowPath(from, to));
     path.setAttribute('class', 'path');
     connectionsSvg.appendChild(path);
   });
@@ -223,10 +222,12 @@ zoomOutBtn.addEventListener('click', () => setZoom(zoom - 0.1));
 zoomInBtn.addEventListener('click', () => setZoom(zoom + 0.1));
 
 function centerOnNode(id) {
-  const pos = positions.get(id);
-  if (!pos) return;
-  const targetX = pos.x * zoom - workspace.clientWidth / 2 + 90;
-  const targetY = pos.y * zoom - workspace.clientHeight / 2 + 80;
+  const element = nodesContainer.querySelector(`[data-id="${id}"]`);
+  if (!element) return;
+  const workspaceRect = workspace.getBoundingClientRect();
+  const nodeRect = element.getBoundingClientRect();
+  const targetX = workspace.scrollLeft + (nodeRect.left - workspaceRect.left) - workspace.clientWidth / 2 + nodeRect.width / 2;
+  const targetY = workspace.scrollTop + (nodeRect.top - workspaceRect.top) - workspace.clientHeight / 2 + nodeRect.height / 2;
   workspace.scrollTo({ left: targetX, top: targetY, behavior: 'smooth' });
 }
 
