@@ -195,11 +195,16 @@ function createNode({ column, parentId }) {
   selectedId = newId;
   render();
   centerOnNode(newId);
+  requestAnimationFrame(() => {
+    const titleEl = nodesContainer.querySelector(`[data-id="${newId}"] .node-text`);
+    titleEl?.focus({ preventScroll: true });
+  });
 }
 
 function handleKeydown(e) {
   const active = document.activeElement;
-  if (active?.isContentEditable && e.key !== 'Delete') {
+  const isEditing = active?.isContentEditable;
+  if (isEditing && e.key !== 'Tab' && e.key !== 'Delete') {
     return;
   }
   if (!selectedId) return;
