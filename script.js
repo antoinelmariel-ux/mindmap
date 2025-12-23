@@ -8,22 +8,43 @@ const columns = [
 ];
 
 let nodes = [
-  { id: 'n1', column: 0, text: 'Gagner des marchés publics', parentId: null, color: 'objective' },
-  { id: 'n2', column: 1, text: "Acteur/tiers : Définit les marchés publics d'achats 'drogue' pour nous", parentId: 'n1', color: 'tier' },
-  { id: 'n3', column: 1, text: 'Tiers: Concurrent; Propose des prestations moins bonnes que le LFB', parentId: 'n1', color: 'tier' },
-  { id: 'n4', column: 2, text: 'Moyen: Faire une offre plus compétitive', parentId: 'n3', color: 'moyen' },
-  { id: 'n5', column: 2, text: "Contrat dépays avec l'acheteur public pour une prestation fictive", parentId: 'n2', color: 'moyen' },
-  { id: 'n6', column: 2, text: "Embauche d'un proche de l'acheteur", parentId: 'n2', color: 'moyen' },
-  { id: 'n7', column: 3, text: 'Contrôle: des fournisseurs post board', parentId: 'n5', color: 'controle' },
-  { id: 'n8', column: 4, text: 'Limite : Flous juridiques', parentId: 'n7', color: 'limite' },
-  { id: 'n9', column: 4, text: 'Limite : Juste et délicat?', parentId: 'n7', color: 'limite' },
-  { id: 'n10', column: 5, text: 'Proba: Probabilité faible', parentId: 'n8', color: 'proba' },
+  { id: 'n1', column: 0, text: 'Gagner des marchés publics', parentId: null, color: 'objective', sortOrder: 0 },
+  {
+    id: 'n2',
+    column: 1,
+    text: "Acteur/tiers : Définit les marchés publics d'achats 'drogue' pour nous",
+    parentId: 'n1',
+    color: 'tier',
+    sortOrder: 0,
+  },
+  {
+    id: 'n3',
+    column: 1,
+    text: 'Tiers: Concurrent; Propose des prestations moins bonnes que le LFB',
+    parentId: 'n1',
+    color: 'tier',
+    sortOrder: 1,
+  },
+  { id: 'n4', column: 2, text: 'Moyen: Faire une offre plus compétitive', parentId: 'n3', color: 'moyen', sortOrder: 0 },
+  {
+    id: 'n5',
+    column: 2,
+    text: "Contrat dépays avec l'acheteur public pour une prestation fictive",
+    parentId: 'n2',
+    color: 'moyen',
+    sortOrder: 0,
+  },
+  { id: 'n6', column: 2, text: "Embauche d'un proche de l'acheteur", parentId: 'n2', color: 'moyen', sortOrder: 1 },
+  { id: 'n7', column: 3, text: 'Contrôle: des fournisseurs post board', parentId: 'n5', color: 'controle', sortOrder: 0 },
+  { id: 'n8', column: 4, text: 'Limite : Flous juridiques', parentId: 'n7', color: 'limite', sortOrder: 0 },
+  { id: 'n9', column: 4, text: 'Limite : Juste et délicat?', parentId: 'n7', color: 'limite', sortOrder: 1 },
+  { id: 'n10', column: 5, text: 'Proba: Probabilité faible', parentId: 'n8', color: 'proba', sortOrder: 0 },
 ];
 
 let selectedId = nodes[0].id;
 let zoom = 0.8;
 const columnSpacing = 260;
-const rowSpacing = 140;
+const rowSpacing = 170;
 const mapWrapper = document.getElementById('map-wrapper');
 const nodesContainer = document.getElementById('nodes');
 const connectionsSvg = document.getElementById('connections');
@@ -40,6 +61,34 @@ const deleteBranchBtn = document.getElementById('delete-branch');
 
 let positions = new Map();
 
+function sortValue(node, fallback) {
+  return node.sortOrder ?? fallback;
+}
+
+function computeInsertionOrder(column, parentId, afterId) {
+  const siblings = nodes
+    .filter((n) => n.column === column && n.parentId === parentId)
+    .sort((a, b) => sortValue(a, 0) - sortValue(b, 0) || a.id.localeCompare(b.id));
+
+  if (!siblings.length) return 0;
+
+  if (!afterId) {
+    return sortValue(siblings[siblings.length - 1], siblings.length - 1) + 1;
+  }
+
+  const index = siblings.findIndex((s) => s.id === afterId);
+  if (index === -1) {
+    return sortValue(siblings[siblings.length - 1], siblings.length - 1) + 1;
+  }
+
+  const currentOrder = sortValue(siblings[index], index);
+  const nextOrder = siblings[index + 1] ? sortValue(siblings[index + 1], index + 1) : currentOrder + 1;
+  if (nextOrder === currentOrder) {
+    return currentOrder + 1;
+  }
+  return (currentOrder + nextOrder) / 2;
+}
+
 function computeLayout() {
   positions = new Map();
   const byColumn = columns.map(() => []);
@@ -50,7 +99,7 @@ function computeLayout() {
     return Math.max(mapWrapper.clientHeight, count * rowSpacing + 400);
   });
 
-  byColumn.forEach((colNodes) => colNodes.sort((a, b) => a.id.localeCompare(b.id)));
+  byColumn.forEach((colNodes) => colNodes.sort((a, b) => sortValue(a, 0) - sortValue(b, 0) || a.id.localeCompare(b.id)));
 
   // Position first column
   const firstCol = byColumn[0];
@@ -68,6 +117,9 @@ function computeLayout() {
     colNodes.sort((a, b) => {
       const ay = positions.get(a.parentId)?.y ?? 0;
       const by = positions.get(b.parentId)?.y ?? 0;
+      if (ay === by && a.parentId === b.parentId) {
+        return sortValue(a, 0) - sortValue(b, 0) || a.id.localeCompare(b.id);
+      }
       return ay - by;
     });
     let currentY = 140;
@@ -186,11 +238,12 @@ function updateHelperPanel() {
   deleteBranchBtn.disabled = !hasSelection;
 }
 
-function createNode({ column, parentId }) {
+function createNode({ column, parentId, afterId }) {
   const newId = `n${Date.now()}`;
   const columnMeta = columns[column];
   const text = `${columnMeta.label} ${Math.floor(Math.random() * 90 + 10)}`;
-  const node = { id: newId, column, parentId: parentId ?? null, text, color: columnMeta.color };
+  const sortOrder = computeInsertionOrder(column, parentId ?? null, afterId);
+  const node = { id: newId, column, parentId: parentId ?? null, text, color: columnMeta.color, sortOrder };
   nodes.push(node);
   selectedId = newId;
   render();
@@ -213,7 +266,7 @@ function handleKeydown(e) {
 
   if (e.key === 'Enter') {
     e.preventDefault();
-    createNode({ column: current.column, parentId: current.parentId });
+    createNode({ column: current.column, parentId: current.parentId, afterId: current.id });
   } else if (e.key === 'Tab') {
     e.preventDefault();
     const nextColumn = current.column + 1;
@@ -231,7 +284,7 @@ document.addEventListener('keydown', handleKeydown);
 function addSiblingNode() {
   const current = nodes.find((n) => n.id === selectedId);
   if (!current) return;
-  createNode({ column: current.column, parentId: current.parentId });
+  createNode({ column: current.column, parentId: current.parentId, afterId: current.id });
 }
 
 function addChildNode() {
