@@ -497,11 +497,23 @@ body {
 }
 
 .mention-admin {
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  padding-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.mentions-panel {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  max-width: 720px;
+}
+
+#tab-notes .mention-admin {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 12px;
 }
 
 .mention-admin-title {
@@ -566,6 +578,37 @@ body {
 .mention-node .meta {
   font-size: 11px;
   color: #cbd5e1;
+}
+
+#tab-mentions .mention-admin-title {
+  color: #0f172a;
+}
+
+#tab-mentions .mention-admin-desc {
+  color: #475569;
+}
+
+#tab-mentions .mention-group {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+}
+
+#tab-mentions .mention-group-header {
+  color: #0f172a;
+}
+
+#tab-mentions .mention-group-header .count {
+  color: #475569;
+}
+
+#tab-mentions .mention-node {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: #0f172a;
+}
+
+#tab-mentions .mention-node .meta {
+  color: #475569;
 }
 
 .footer {

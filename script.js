@@ -439,8 +439,20 @@ function elbowPath(from, to) {
   const startY = from.y + 32;
   const endX = to.x - 16;
   const endY = to.y + 32;
-  const midX = (startX + endX) / 2;
-  return `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const distance = Math.hypot(dx, dy);
+  const handle = Math.min(220, distance / 2);
+  const angle = Math.atan2(dy, dx);
+  const control1 = {
+    x: startX + Math.cos(angle) * handle,
+    y: startY,
+  };
+  const control2 = {
+    x: endX - Math.cos(angle) * handle,
+    y: endY - Math.sin(angle) * handle,
+  };
+  return `M ${startX} ${startY} C ${control1.x} ${control1.y}, ${control2.x} ${control2.y}, ${endX} ${endY}`;
 }
 
 function renderConnections() {
