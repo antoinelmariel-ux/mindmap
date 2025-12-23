@@ -928,11 +928,22 @@ function renderMentionBackoffice() {
 }
 
 function buildSyntheseEntries() {
+  function findAncestorWithColumn(startNode, targetColumn) {
+    let currentId = startNode?.parentId;
+    while (currentId) {
+      const ancestor = nodes.find((n) => n.id === currentId);
+      if (!ancestor) break;
+      if (ancestor.column === targetColumn) return ancestor;
+      currentId = ancestor.parentId;
+    }
+    return null;
+  }
+
   return nodes
     .filter((n) => n.column === 3)
     .map((moyen) => {
-      const comportement = nodes.find((n) => n.id === moyen.parentId && n.column === 2);
-      const tier = comportement ? nodes.find((n) => n.id === comportement.parentId && n.column === 1) : null;
+      const comportement = findAncestorWithColumn(moyen, 2);
+      const tier = comportement ? findAncestorWithColumn(comportement, 1) : null;
       if (!comportement || !tier) return null;
 
       const moyenCategory = (moyen.tag || moyen.text || '').trim() || 'Moyen non catégorisé';
