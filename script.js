@@ -1,6 +1,7 @@
 const columns = [
   { key: 'objective', label: 'Objectif', color: 'objective', placeholder: 'Nouvel objectif' },
   { key: 'tier', label: 'Tiers', color: 'tier', placeholder: 'Nouveau tiers' },
+  { key: 'comportement', label: 'Comportement', color: 'comportement', placeholder: 'Nouveau comportement' },
   { key: 'moyen', label: 'Moyen', color: 'moyen', placeholder: 'Nouveau moyen' },
   { key: 'controle', label: 'Contrôle', color: 'controle', placeholder: 'Nouveau contrôle' },
   { key: 'limite', label: 'Limite', color: 'limite', placeholder: 'Nouvelle limite' },
@@ -334,7 +335,7 @@ function renderNodes() {
       appendCategorySelect(el, node, tierCategoryOptions, 'tierCategory');
     }
 
-    if (node.column === 2) {
+    if (node.column === 3) {
       appendCategorySelect(el, node, tagOptions, 'tag');
     }
 
@@ -821,7 +822,7 @@ function renderTagManager() {
     removeBtn.addEventListener('click', () => {
       tagOptions = tagOptions.filter((t) => t !== tag);
       nodes.forEach((n) => {
-        if (n.column === 2 && n.tag === tag) {
+        if (n.column === 3 && n.tag === tag) {
           n.tag = '';
         }
       });
