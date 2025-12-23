@@ -24,7 +24,8 @@ let linkingFromId = null;
 let linkPreviewPath = null;
 let currentLinkTargetId = null;
 let zoom = 1.0;
-const columnSpacing = 260;
+const NODE_WIDTH = 300;
+const columnSpacing = NODE_WIDTH + 60;
 const rowSpacing = 170;
 const mapWrapper = document.getElementById('map-wrapper');
 const nodesContainer = document.getElementById('nodes');
@@ -42,6 +43,7 @@ const deleteBranchBtn = document.getElementById('delete-branch');
 const tagListEl = document.getElementById('tag-list');
 const addTagBtn = document.getElementById('add-tag');
 const newTagInput = document.getElementById('new-tag');
+const mentionListEl = document.getElementById('mention-list');
 const tabButtons = document.querySelectorAll('.tab-button');
 const tabPanels = document.querySelectorAll('.tab-panel');
 
@@ -148,6 +150,31 @@ function isNodeVisible(id) {
   const node = nodes.find((n) => n.id === id);
   if (!node) return false;
   return !isAncestorCollapsed(node);
+}
+
+function extractMentions(text) {
+  if (!text) return [];
+  const mentions = [];
+  const mentionRegex = /@([A-Za-zÀ-ÖØ-öø-ÿ0-9_-]+)/g;
+  let match;
+  while ((match = mentionRegex.exec(text)) !== null) {
+    mentions.push(match[1]);
+  }
+  return mentions;
+}
+
+function getMentionGroups() {
+  const groups = new Map();
+  nodes.forEach((node) => {
+    const mentions = extractMentions(node.text);
+    mentions.forEach((mention) => {
+      if (!groups.has(mention)) {
+        groups.set(mention, []);
+      }
+      groups.get(mention).push(node);
+    });
+  });
+  return groups;
 }
 
 function computeInsertionOrder(column, parentId, afterId) {
@@ -408,7 +435,7 @@ function updateSelection() {
 }
 
 function elbowPath(from, to) {
-  const startX = from.x + 180;
+  const startX = from.x + NODE_WIDTH - 60;
   const startY = from.y + 32;
   const endX = to.x - 16;
   const endY = to.y + 32;
@@ -445,6 +472,7 @@ function render() {
   renderNodes();
   preventNodeOverlap();
   renderConnections();
+  renderMentionBackoffice();
   applyZoom();
   if (selectedId && !isNodeVisible(selectedId)) {
     const parentId = nodes.find((n) => n.id === selectedId)?.parentId;
@@ -587,6 +615,7 @@ function updateNodeText(id, text) {
   if (trimmed === node.text) return;
   node.text = trimmed;
   updateHelperPanel();
+  renderMentionBackoffice();
   recordHistory();
 }
 
@@ -681,7 +710,7 @@ function handleLinkingMove(event) {
     linkPreviewPath.setAttribute('d', elbowPath(fromPos, toPos));
     linkPreviewPath.setAttribute('marker-end', 'url(#arrowhead)');
   } else {
-    const startX = fromPos.x + 180;
+    const startX = fromPos.x + NODE_WIDTH - 60;
     const startY = fromPos.y + 32;
     linkPreviewPath.setAttribute('d', `M ${startX} ${startY} L ${pointerPos.x} ${pointerPos.y}`);
     linkPreviewPath.removeAttribute('marker-end');
@@ -762,6 +791,59 @@ function renderTagManager() {
     });
     item.append(label, removeBtn);
     tagListEl.appendChild(item);
+  });
+}
+
+function renderMentionBackoffice() {
+  if (!mentionListEl) return;
+  mentionListEl.innerHTML = '';
+  const groups = getMentionGroups();
+
+  if (!groups.size) {
+    const empty = document.createElement('div');
+    empty.className = 'mention-admin-desc';
+    empty.textContent = 'Aucune mention @ détectée pour le moment.';
+    mentionListEl.appendChild(empty);
+    return;
+  }
+
+  const sortedGroups = Array.from(groups.entries()).sort((a, b) =>
+    a[0].localeCompare(b[0], 'fr', { sensitivity: 'base' })
+  );
+
+  sortedGroups.forEach(([mention, nodesWithMention]) => {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'mention-group';
+
+    const header = document.createElement('div');
+    header.className = 'mention-group-header';
+    header.innerHTML = `<span>@${mention}</span><span class="count">${nodesWithMention.length} bulle${
+      nodesWithMention.length > 1 ? 's' : ''
+    }</span>`;
+
+    const list = document.createElement('div');
+    list.className = 'mention-node-list';
+
+    const orderedNodes = [...nodesWithMention].sort((a, b) => {
+      const columnDiff = a.column - b.column;
+      if (columnDiff !== 0) return columnDiff;
+      return (a.text || '').localeCompare(b.text || '', 'fr', { sensitivity: 'base' });
+    });
+
+    orderedNodes.forEach((node) => {
+      const item = document.createElement('div');
+      item.className = 'mention-node';
+      const text = document.createElement('div');
+      text.textContent = node.text || '[Sans titre]';
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.textContent = `${columns[node.column]?.label ?? 'Inconnu'} • ${node.id}`;
+      item.append(text, meta);
+      list.appendChild(item);
+    });
+
+    groupEl.append(header, list);
+    mentionListEl.appendChild(groupEl);
   });
 }
 

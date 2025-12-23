@@ -141,8 +141,9 @@ body {
   position: absolute;
   padding: 12px 16px;
   border-radius: 16px;
-  min-width: 180px;
-  max-width: 240px;
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
   line-height: 1.4;
   font-weight: 600;
   cursor: pointer;
@@ -493,6 +494,78 @@ body {
   padding: 6px 8px;
   border-radius: 8px;
   cursor: pointer;
+}
+
+.mention-admin {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mention-admin-title {
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mention-admin-desc {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.mention-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mention-group {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mention-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #e2e8f0;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.mention-group-header .count {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.mention-node-list {
+  display: grid;
+  gap: 6px;
+}
+
+.mention-node {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mention-node .meta {
+  font-size: 11px;
+  color: #cbd5e1;
 }
 
 .footer {
