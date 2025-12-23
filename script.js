@@ -7,41 +7,22 @@ const columns = [
   { key: 'proba', label: 'Proba', color: 'proba', placeholder: 'Nouvelle probabilité' },
 ];
 
-let nodes = [
-  { id: 'n1', column: 0, text: 'Gagner des marchés publics', parentId: null, color: 'objective', sortOrder: 0 },
-  {
-    id: 'n2',
-    column: 1,
-    text: "Acteur/tiers : Définit les marchés publics d'achats 'drogue' pour nous",
-    parentId: 'n1',
-    color: 'tier',
-    sortOrder: 0,
-  },
-  {
-    id: 'n3',
-    column: 1,
-    text: 'Tiers: Concurrent; Propose des prestations moins bonnes que le LFB',
-    parentId: 'n1',
-    color: 'tier',
-    sortOrder: 1,
-  },
-  { id: 'n4', column: 2, text: 'Moyen: Faire une offre plus compétitive', parentId: 'n3', color: 'moyen', sortOrder: 0 },
-  {
-    id: 'n5',
-    column: 2,
-    text: "Contrat dépays avec l'acheteur public pour une prestation fictive",
-    parentId: 'n2',
-    color: 'moyen',
-    sortOrder: 0,
-  },
-  { id: 'n6', column: 2, text: "Embauche d'un proche de l'acheteur", parentId: 'n2', color: 'moyen', sortOrder: 1 },
-  { id: 'n7', column: 3, text: 'Contrôle: des fournisseurs post board', parentId: 'n5', color: 'controle', sortOrder: 0 },
-  { id: 'n8', column: 4, text: 'Limite : Flous juridiques', parentId: 'n7', color: 'limite', sortOrder: 0 },
-  { id: 'n9', column: 4, text: 'Limite : Juste et délicat?', parentId: 'n7', color: 'limite', sortOrder: 1 },
-  { id: 'n10', column: 5, text: 'Proba: Probabilité faible', parentId: 'n8', color: 'proba', sortOrder: 0 },
-];
+let nodes = [{ id: 'n1', column: 0, text: 'Objectif principal', parentId: null, color: 'objective', sortOrder: 0 }];
 
 let selectedId = nodes[0].id;
+let collapsed = new Set();
+let tagOptions = [
+  'Corruption active',
+  'corruption passive',
+  "trafic d'influence actif",
+  'favoritisme',
+  "prise illégale d'intérêt",
+];
+let history = [];
+let isRestoring = false;
+let linkingFromId = null;
+let linkPreviewPath = null;
+let currentLinkTargetId = null;
 let zoom = 0.8;
 const columnSpacing = 260;
 const rowSpacing = 170;
@@ -58,11 +39,72 @@ const selectionLabel = document.getElementById('current-selection');
 const addSiblingBtn = document.getElementById('add-sibling');
 const addChildBtn = document.getElementById('add-child');
 const deleteBranchBtn = document.getElementById('delete-branch');
+const tagListEl = document.getElementById('tag-list');
+const addTagBtn = document.getElementById('add-tag');
+const newTagInput = document.getElementById('new-tag');
+
+function snapshotState() {
+  return {
+    nodes: nodes.map((n) => ({ ...n })),
+    selectedId,
+    collapsed: Array.from(collapsed),
+    tagOptions: [...tagOptions],
+  };
+}
+
+function recordHistory() {
+  if (isRestoring) return;
+  history.push(snapshotState());
+  if (history.length > 200) {
+    history.shift();
+  }
+}
+
+function restoreState(state) {
+  isRestoring = true;
+  nodes = state.nodes.map((n) => ({ ...n }));
+  selectedId = state.selectedId;
+  collapsed = new Set(state.collapsed);
+  tagOptions = [...state.tagOptions];
+  renderTagManager();
+  render();
+  isRestoring = false;
+}
+
+function undo() {
+  if (history.length <= 1) return;
+  history.pop();
+  const previous = history[history.length - 1];
+  restoreState(previous);
+}
 
 let positions = new Map();
 
 function sortValue(node, fallback) {
   return node.sortOrder ?? fallback;
+}
+
+function hasChildren(nodeId) {
+  return nodes.some((n) => n.parentId === nodeId);
+}
+
+function isAncestorCollapsed(node) {
+  let parentId = node.parentId;
+  while (parentId) {
+    if (collapsed.has(parentId)) return true;
+    parentId = nodes.find((n) => n.id === parentId)?.parentId ?? null;
+  }
+  return false;
+}
+
+function getVisibleNodes() {
+  return nodes.filter((n) => !isAncestorCollapsed(n));
+}
+
+function isNodeVisible(id) {
+  const node = nodes.find((n) => n.id === id);
+  if (!node) return false;
+  return !isAncestorCollapsed(node);
 }
 
 function computeInsertionOrder(column, parentId, afterId) {
@@ -91,8 +133,9 @@ function computeInsertionOrder(column, parentId, afterId) {
 
 function computeLayout() {
   positions = new Map();
+  const visibleNodes = getVisibleNodes();
   const byColumn = columns.map(() => []);
-  nodes.forEach((n) => byColumn[n.column]?.push(n));
+  visibleNodes.forEach((n) => byColumn[n.column]?.push(n));
 
   const heights = columns.map((_, idx) => {
     const count = byColumn[idx].length || 1;
@@ -136,8 +179,11 @@ function computeLayout() {
 
 function renderNodes() {
   nodesContainer.innerHTML = '';
-  nodes.forEach((node) => {
-    const { x, y } = positions.get(node.id);
+  const visibleNodes = getVisibleNodes();
+  visibleNodes.forEach((node) => {
+    const position = positions.get(node.id);
+    if (!position) return;
+    const { x, y } = position;
     const el = document.createElement('div');
     el.className = `node ${node.color} ${selectedId === node.id ? 'selected' : ''}`;
     el.style.left = `${x}px`;
@@ -152,6 +198,7 @@ function renderNodes() {
     const title = document.createElement('div');
     title.className = 'node-text';
     title.contentEditable = 'true';
+    title.dataset.placeholder = columns[node.column].placeholder;
     title.textContent = node.text;
     title.addEventListener('focus', () => {
       selectedId = node.id;
@@ -169,16 +216,64 @@ function renderNodes() {
       }
     });
     title.addEventListener('blur', () => {
-      updateNodeText(node.id, title.textContent || '');
+      const sanitized = title.textContent || '';
+      updateNodeText(node.id, sanitized);
+      if (!sanitized.trim()) {
+        title.textContent = '';
+      }
     });
 
     el.appendChild(title);
 
-    el.addEventListener('click', () => {
+    if (node.column === 2) {
+      const tagRow = document.createElement('div');
+      tagRow.className = 'tag-row';
+      const label = document.createElement('span');
+      label.textContent = 'Tag :';
+      label.className = 'tag-label';
+      const select = document.createElement('select');
+      select.className = 'tag-select';
+      select.innerHTML = `<option value="">Sélectionner un tag</option>`;
+      tagOptions.forEach((opt) => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        select.appendChild(option);
+      });
+      select.value = node.tag || '';
+      select.addEventListener('change', () => {
+        if (node.tag === select.value) return;
+        node.tag = select.value;
+        recordHistory();
+      });
+      tagRow.append(label, select);
+      el.appendChild(tagRow);
+    }
+
+    if (hasChildren(node.id)) {
+      const toggle = document.createElement('button');
+      toggle.className = `collapse-toggle ${collapsed.has(node.id) ? 'collapsed' : ''}`;
+      toggle.type = 'button';
+      toggle.title = collapsed.has(node.id) ? 'Déplier la branche' : 'Replier la branche';
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleBranch(node.id);
+      });
+      el.appendChild(toggle);
+    }
+
+    el.addEventListener('click', (event) => {
+      if (event.target.closest('select')) return;
       selectedId = node.id;
       updateSelection();
       centerOnNode(node.id);
       title.focus({ preventScroll: true });
+    });
+
+    el.addEventListener('mousedown', (event) => {
+      if (event.button !== 0) return;
+      if (event.target.isContentEditable || event.target.closest('select') || event.target.classList.contains('collapse-toggle')) return;
+      startLinking(node.id, event);
     });
 
     nodesContainer.appendChild(el);
@@ -204,11 +299,12 @@ function elbowPath(from, to) {
 
 function renderConnections() {
   connectionsSvg.innerHTML = '';
+  if (!positions.size) return;
   const maxX = Math.max(...Array.from(positions.values()).map((p) => p.x)) + 500;
   const maxY = Math.max(...Array.from(positions.values()).map((p) => p.y)) + 400;
   connectionsSvg.setAttribute('width', maxX);
   connectionsSvg.setAttribute('height', maxY);
-  nodes.forEach((node) => {
+  getVisibleNodes().forEach((node) => {
     if (!node.parentId) return;
     const from = positions.get(node.parentId);
     const to = positions.get(node.id);
@@ -218,6 +314,9 @@ function renderConnections() {
     path.setAttribute('class', 'path');
     connectionsSvg.appendChild(path);
   });
+  if (linkPreviewPath) {
+    connectionsSvg.appendChild(linkPreviewPath);
+  }
 }
 
 function render() {
@@ -225,6 +324,10 @@ function render() {
   renderNodes();
   renderConnections();
   applyZoom();
+  if (selectedId && !isNodeVisible(selectedId)) {
+    const parentId = nodes.find((n) => n.id === selectedId)?.parentId;
+    selectedId = parentId ?? nodes[0]?.id ?? null;
+  }
   updateSelection();
 }
 
@@ -232,7 +335,8 @@ function updateHelperPanel() {
   const current = nodes.find((n) => n.id === selectedId);
   const hasSelection = Boolean(current);
   const canCreateChild = hasSelection && current.column + 1 < columns.length;
-  selectionLabel.textContent = `Sélection : ${hasSelection ? current.text : 'Aucune'}`;
+  const displayText = hasSelection ? current.text || columns[current.column].placeholder : 'Aucune';
+  selectionLabel.textContent = `Sélection : ${displayText}`;
   addSiblingBtn.disabled = !hasSelection;
   addChildBtn.disabled = !canCreateChild;
   deleteBranchBtn.disabled = !hasSelection;
@@ -241,12 +345,13 @@ function updateHelperPanel() {
 function createNode({ column, parentId, afterId }) {
   const newId = `n${Date.now()}`;
   const columnMeta = columns[column];
-  const text = `${columnMeta.label} ${Math.floor(Math.random() * 90 + 10)}`;
+  const text = '';
   const sortOrder = computeInsertionOrder(column, parentId ?? null, afterId);
   const node = { id: newId, column, parentId: parentId ?? null, text, color: columnMeta.color, sortOrder };
   nodes.push(node);
   selectedId = newId;
   render();
+  recordHistory();
   centerOnNode(newId);
   requestAnimationFrame(() => {
     const titleEl = nodesContainer.querySelector(`[data-id="${newId}"] .node-text`);
@@ -257,6 +362,11 @@ function createNode({ column, parentId, afterId }) {
 function handleKeydown(e) {
   const active = document.activeElement;
   const isEditing = active?.isContentEditable;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    undo();
+    return;
+  }
   if (isEditing && e.key !== 'Tab' && e.key !== 'Delete') {
     return;
   }
@@ -304,6 +414,13 @@ function deleteSelectedBranch() {
 addSiblingBtn.addEventListener('click', addSiblingNode);
 addChildBtn.addEventListener('click', addChildNode);
 deleteBranchBtn.addEventListener('click', deleteSelectedBranch);
+addTagBtn?.addEventListener('click', addTagFromInput);
+newTagInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addTagFromInput();
+  }
+});
 
 function applyZoom() {
   mapWrapper.style.transform = `scale(${zoom})`;
@@ -336,8 +453,11 @@ function centerOnNode(id) {
 function updateNodeText(id, text) {
   const node = nodes.find((n) => n.id === id);
   if (!node) return;
-  node.text = text.trim() || columns[node.column].placeholder;
+  const trimmed = text.trim();
+  if (trimmed === node.text) return;
+  node.text = trimmed;
   updateHelperPanel();
+  recordHistory();
 }
 
 function deleteNodeTree(id) {
@@ -349,6 +469,7 @@ function deleteNodeTree(id) {
   }
   collect(id);
   nodes = nodes.filter((n) => !idsToRemove.has(n.id));
+  idsToRemove.forEach((removedId) => collapsed.delete(removedId));
   if (!nodes.length) {
     selectedId = null;
   } else {
@@ -356,9 +477,172 @@ function deleteNodeTree(id) {
     selectedId = nodes.find((n) => n.id === parentId)?.id || nodes[0].id;
   }
   render();
+  recordHistory();
   if (selectedId) {
     centerOnNode(selectedId);
   }
+}
+
+function toggleBranch(id) {
+  if (!hasChildren(id)) return;
+  if (collapsed.has(id)) {
+    collapsed.delete(id);
+  } else {
+    collapsed.add(id);
+    if (selectedId && !isNodeVisible(selectedId)) {
+      selectedId = id;
+    }
+  }
+  render();
+  recordHistory();
+}
+
+function mapCoordinates(clientX, clientY) {
+  const rect = mapWrapper.getBoundingClientRect();
+  const x = (clientX - rect.left) / zoom;
+  const y = (clientY - rect.top) / zoom;
+  return { x, y };
+}
+
+function resetLinkingState() {
+  linkingFromId = null;
+  currentLinkTargetId = null;
+  if (linkPreviewPath?.parentNode) {
+    linkPreviewPath.parentNode.removeChild(linkPreviewPath);
+  }
+  linkPreviewPath = null;
+  document.querySelectorAll('.node').forEach((node) => node.classList.remove('link-target'));
+  document.removeEventListener('mousemove', handleLinkingMove);
+  document.removeEventListener('mouseup', handleLinkingEnd);
+}
+
+function startLinking(sourceId, event) {
+  linkingFromId = sourceId;
+  linkPreviewPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  linkPreviewPath.setAttribute('class', 'path preview');
+  handleLinkingMove(event);
+  document.addEventListener('mousemove', handleLinkingMove);
+  document.addEventListener('mouseup', handleLinkingEnd);
+}
+
+function handleLinkingMove(event) {
+  if (!linkingFromId || !linkPreviewPath) return;
+  const fromPos = positions.get(linkingFromId);
+  const pointerPos = mapCoordinates(event.clientX, event.clientY);
+  const hovered = document.elementFromPoint(event.clientX, event.clientY)?.closest('.node');
+  const hoveredId = hovered?.dataset.id;
+
+  if (currentLinkTargetId && currentLinkTargetId !== hoveredId) {
+    document.querySelector(`.node[data-id="${currentLinkTargetId}"]`)?.classList.remove('link-target');
+    currentLinkTargetId = null;
+  }
+
+  const sourceNode = nodes.find((n) => n.id === linkingFromId);
+  const hoveredNode = nodes.find((n) => n.id === hoveredId);
+
+  if (hoveredId && hoveredId !== linkingFromId && hoveredNode && sourceNode && hoveredNode.column > sourceNode.column) {
+    currentLinkTargetId = hoveredId;
+    hovered.classList.add('link-target');
+  }
+
+  const toPos = currentLinkTargetId ? positions.get(currentLinkTargetId) : pointerPos;
+  if (!fromPos || !toPos) return;
+  if (currentLinkTargetId) {
+    linkPreviewPath.setAttribute('d', elbowPath(fromPos, toPos));
+  } else {
+    const startX = fromPos.x + 180;
+    const startY = fromPos.y + 32;
+    linkPreviewPath.setAttribute('d', `M ${startX} ${startY} L ${pointerPos.x} ${pointerPos.y}`);
+  }
+  renderConnections();
+}
+
+function shiftBranchColumn(nodeId, delta) {
+  const queue = [nodeId];
+  while (queue.length) {
+    const currentId = queue.shift();
+    const node = nodes.find((n) => n.id === currentId);
+    if (!node) continue;
+    node.column = Math.min(columns.length - 1, Math.max(0, node.column + delta));
+    nodes
+      .filter((n) => n.parentId === currentId)
+      .forEach((child) => {
+        queue.push(child.id);
+      });
+  }
+}
+
+function reparentNode(targetId, newParentId) {
+  const target = nodes.find((n) => n.id === targetId);
+  const parent = nodes.find((n) => n.id === newParentId);
+  if (!target || !parent) return;
+  let ancestor = parent.parentId;
+  while (ancestor) {
+    if (ancestor === targetId) return;
+    ancestor = nodes.find((n) => n.id === ancestor)?.parentId ?? null;
+  }
+  const newColumn = Math.min(columns.length - 1, parent.column + 1);
+  const delta = newColumn - target.column;
+  target.parentId = newParentId;
+  target.sortOrder = computeInsertionOrder(newColumn, newParentId, null);
+  if (delta !== 0) {
+    shiftBranchColumn(targetId, delta);
+  } else {
+    target.column = newColumn;
+  }
+  selectedId = targetId;
+  render();
+  recordHistory();
+}
+
+function handleLinkingEnd() {
+  if (linkingFromId && currentLinkTargetId) {
+    const fromNode = nodes.find((n) => n.id === linkingFromId);
+    const toNode = nodes.find((n) => n.id === currentLinkTargetId);
+    if (fromNode && toNode && toNode.column > fromNode.column) {
+      reparentNode(currentLinkTargetId, linkingFromId);
+    }
+  }
+  resetLinkingState();
+}
+
+function renderTagManager() {
+  if (!tagListEl) return;
+  tagListEl.innerHTML = '';
+  tagOptions.forEach((tag) => {
+    const item = document.createElement('div');
+    item.className = 'tag-item';
+    const label = document.createElement('span');
+    label.textContent = tag;
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.textContent = 'Retirer';
+    removeBtn.addEventListener('click', () => {
+      tagOptions = tagOptions.filter((t) => t !== tag);
+      nodes.forEach((n) => {
+        if (n.column === 2 && n.tag === tag) {
+          n.tag = '';
+        }
+      });
+      renderTagManager();
+      render();
+      recordHistory();
+    });
+    item.append(label, removeBtn);
+    tagListEl.appendChild(item);
+  });
+}
+
+function addTagFromInput() {
+  const value = newTagInput?.value.trim();
+  if (!value) return;
+  if (!tagOptions.includes(value)) {
+    tagOptions.push(value);
+    renderTagManager();
+    render();
+    recordHistory();
+  }
+  newTagInput.value = '';
 }
 
 function fitToScreen() {
@@ -379,5 +663,7 @@ function fitToScreen() {
 
 fitBtn.addEventListener('click', fitToScreen);
 
+renderTagManager();
 render();
 fitToScreen();
+recordHistory();
