@@ -23,7 +23,7 @@ let isRestoring = false;
 let linkingFromId = null;
 let linkPreviewPath = null;
 let currentLinkTargetId = null;
-let zoom = 0.8;
+let zoom = 1.0;
 const columnSpacing = 260;
 const rowSpacing = 170;
 const mapWrapper = document.getElementById('map-wrapper');
@@ -93,15 +93,16 @@ function ensureArrowDefs() {
   if (!marker) {
     marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
     marker.setAttribute('id', 'arrowhead');
-    marker.setAttribute('viewBox', '0 0 10 10');
-    marker.setAttribute('refX', '9');
-    marker.setAttribute('refY', '5');
-    marker.setAttribute('markerWidth', '9');
-    marker.setAttribute('markerHeight', '9');
+    marker.setAttribute('viewBox', '0 0 24 24');
+    marker.setAttribute('refX', '20');
+    marker.setAttribute('refY', '12');
+    marker.setAttribute('markerWidth', '16');
+    marker.setAttribute('markerHeight', '16');
+    marker.setAttribute('markerUnits', 'userSpaceOnUse');
     marker.setAttribute('orient', 'auto');
 
     const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    arrowPath.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+    arrowPath.setAttribute('d', 'M 0 0 L 24 12 L 0 24 z');
     arrowPath.setAttribute('fill', '#91a4c1');
     marker.appendChild(arrowPath);
     defs.appendChild(marker);
@@ -270,9 +271,6 @@ function renderNodes() {
     if (node.column === 2) {
       const tagRow = document.createElement('div');
       tagRow.className = 'tag-row';
-      const label = document.createElement('span');
-      label.textContent = 'Catégorie';
-      label.className = 'tag-label';
       const select = document.createElement('select');
       select.className = 'tag-select';
       select.innerHTML = `<option value="">Catégorie</option>`;
@@ -288,7 +286,7 @@ function renderNodes() {
         node.tag = select.value;
         recordHistory();
       });
-      tagRow.append(label, select);
+      tagRow.append(select);
       el.appendChild(tagRow);
     }
 
@@ -412,7 +410,7 @@ function updateSelection() {
 function elbowPath(from, to) {
   const startX = from.x + 180;
   const startY = from.y + 32;
-  const endX = to.x - 12;
+  const endX = to.x - 16;
   const endY = to.y + 32;
   const midX = (startX + endX) / 2;
   return `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
@@ -801,5 +799,4 @@ fitBtn.addEventListener('click', fitToScreen);
 
 renderTagManager();
 render();
-fitToScreen();
 recordHistory();
