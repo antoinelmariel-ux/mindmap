@@ -18,6 +18,13 @@ let tagOptions = [
   'favoritisme',
   "prise illégale d'intérêt",
 ];
+let tierCategoryOptions = [
+  'Professionnel de santé',
+  'Administratif',
+  'Politique',
+  'Prestataire',
+  'Client',
+];
 let history = [];
 let isRestoring = false;
 let linkingFromId = null;
@@ -43,6 +50,9 @@ const deleteBranchBtn = document.getElementById('delete-branch');
 const tagListEl = document.getElementById('tag-list');
 const addTagBtn = document.getElementById('add-tag');
 const newTagInput = document.getElementById('new-tag');
+const tierCategoryListEl = document.getElementById('tier-category-list');
+const addTierCategoryBtn = document.getElementById('add-tier-category');
+const newTierCategoryInput = document.getElementById('new-tier-category');
 const mentionListEl = document.getElementById('mention-list');
 const tabButtons = document.querySelectorAll('.tab-button');
 const tabPanels = document.querySelectorAll('.tab-panel');
@@ -53,6 +63,7 @@ function snapshotState() {
     selectedId,
     collapsed: Array.from(collapsed),
     tagOptions: [...tagOptions],
+    tierCategoryOptions: [...tierCategoryOptions],
   };
 }
 
@@ -70,7 +81,9 @@ function restoreState(state) {
   selectedId = state.selectedId;
   collapsed = new Set(state.collapsed);
   tagOptions = [...state.tagOptions];
+  tierCategoryOptions = [...(state.tierCategoryOptions ?? tierCategoryOptions)];
   renderTagManager();
+  renderTierCategoryManager();
   render();
   isRestoring = false;
 }
@@ -247,6 +260,28 @@ function computeLayout() {
   }
 }
 
+function appendCategorySelect(container, node, options, key) {
+  const tagRow = document.createElement('div');
+  tagRow.className = 'tag-row';
+  const select = document.createElement('select');
+  select.className = 'tag-select';
+  select.innerHTML = `<option value="">Catégorie</option>`;
+  options.forEach((opt) => {
+    const option = document.createElement('option');
+    option.value = opt;
+    option.textContent = opt;
+    select.appendChild(option);
+  });
+  select.value = node[key] || '';
+  select.addEventListener('change', () => {
+    if (node[key] === select.value) return;
+    node[key] = select.value;
+    recordHistory();
+  });
+  tagRow.append(select);
+  container.appendChild(tagRow);
+}
+
 function renderNodes() {
   nodesContainer.innerHTML = '';
   const visibleNodes = getVisibleNodes();
@@ -295,26 +330,12 @@ function renderNodes() {
 
     el.appendChild(title);
 
+    if (node.column === 1) {
+      appendCategorySelect(el, node, tierCategoryOptions, 'tierCategory');
+    }
+
     if (node.column === 2) {
-      const tagRow = document.createElement('div');
-      tagRow.className = 'tag-row';
-      const select = document.createElement('select');
-      select.className = 'tag-select';
-      select.innerHTML = `<option value="">Catégorie</option>`;
-      tagOptions.forEach((opt) => {
-        const option = document.createElement('option');
-        option.value = opt;
-        option.textContent = opt;
-        select.appendChild(option);
-      });
-      select.value = node.tag || '';
-      select.addEventListener('change', () => {
-        if (node.tag === select.value) return;
-        node.tag = select.value;
-        recordHistory();
-      });
-      tagRow.append(select);
-      el.appendChild(tagRow);
+      appendCategorySelect(el, node, tagOptions, 'tag');
     }
 
     if (hasChildren(node.id)) {
@@ -583,6 +604,13 @@ newTagInput?.addEventListener('keydown', (e) => {
     addTagFromInput();
   }
 });
+addTierCategoryBtn?.addEventListener('click', addTierCategoryFromInput);
+newTierCategoryInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addTierCategoryFromInput();
+  }
+});
 
 tabButtons.forEach((btn) => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tabTarget));
@@ -806,6 +834,33 @@ function renderTagManager() {
   });
 }
 
+function renderTierCategoryManager() {
+  if (!tierCategoryListEl) return;
+  tierCategoryListEl.innerHTML = '';
+  tierCategoryOptions.forEach((category) => {
+    const item = document.createElement('div');
+    item.className = 'tag-item';
+    const label = document.createElement('span');
+    label.textContent = category;
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.textContent = 'Retirer';
+    removeBtn.addEventListener('click', () => {
+      tierCategoryOptions = tierCategoryOptions.filter((t) => t !== category);
+      nodes.forEach((n) => {
+        if (n.column === 1 && n.tierCategory === category) {
+          n.tierCategory = '';
+        }
+      });
+      renderTierCategoryManager();
+      render();
+      recordHistory();
+    });
+    item.append(label, removeBtn);
+    tierCategoryListEl.appendChild(item);
+  });
+}
+
 function renderMentionBackoffice() {
   if (!mentionListEl) return;
   mentionListEl.innerHTML = '';
@@ -871,6 +926,18 @@ function addTagFromInput() {
   newTagInput.value = '';
 }
 
+function addTierCategoryFromInput() {
+  const value = newTierCategoryInput?.value.trim();
+  if (!value) return;
+  if (!tierCategoryOptions.includes(value)) {
+    tierCategoryOptions.push(value);
+    renderTierCategoryManager();
+    render();
+    recordHistory();
+  }
+  newTierCategoryInput.value = '';
+}
+
 function fitToScreen() {
   const xs = Array.from(positions.values()).map((p) => p.x);
   const ys = Array.from(positions.values()).map((p) => p.y);
@@ -892,5 +959,6 @@ function fitToScreen() {
 fitBtn.addEventListener('click', fitToScreen);
 
 renderTagManager();
+renderTierCategoryManager();
 render();
 recordHistory();
