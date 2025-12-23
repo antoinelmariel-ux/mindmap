@@ -532,6 +532,82 @@ body {
   color: #000000;
 }
 
+.synthese-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.synthese-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.synthese-title {
+  font-weight: 800;
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.synthese-desc {
+  margin: 0;
+  color: var(--muted);
+}
+
+.synthese-list {
+  display: grid;
+  gap: 10px;
+}
+
+.synthese-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.synthese-text {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.synthese-meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 700;
+  color: #0f172a;
+  transition: background 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
+}
+
+.ghost:hover {
+  background: #f8fafc;
+}
+
+.ghost:active {
+  transform: translateY(1px);
+}
+
 .mention-list {
   display: flex;
   flex-direction: column;

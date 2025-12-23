@@ -23,8 +23,9 @@
   <main class="app-layout">
     <div class="tab-bar" role="tablist" aria-label="Navigation des onglets">
       <button class="tab-button active" data-tab-target="tab-map" role="tab" aria-selected="true">Carte</button>
-          <button class="tab-button" data-tab-target="tab-mentions" role="tab" aria-selected="false">Mentions @</button>
-        <button class="tab-button" data-tab-target="tab-notes" role="tab" aria-selected="false">Configuration</button>
+      <button class="tab-button" data-tab-target="tab-synthese" role="tab" aria-selected="false">Synthèse</button>
+      <button class="tab-button" data-tab-target="tab-mentions" role="tab" aria-selected="false">Mentions @</button>
+      <button class="tab-button" data-tab-target="tab-notes" role="tab" aria-selected="false">Configuration</button>
     </div>
     <section class="tab-panel active" id="tab-map" role="tabpanel">
       <div class="workspace" id="workspace">
@@ -67,6 +68,19 @@
       </div>
     </section>
 
+    <section class="tab-panel" id="tab-synthese" role="tabpanel" aria-live="polite">
+      <div class="synthese-panel">
+        <div class="synthese-header">
+          <div>
+            <div class="synthese-title">Synthèse des chaînes</div>
+            <p class="synthese-desc">Générez automatiquement les phrases « Catégorie du moyen de Catégorie du tiers afin de Comportement » pour chaque chaîne.</p>
+          </div>
+          <button id="copy-all-synthese" type="button" class="ghost">Copier toutes les synthèses</button>
+        </div>
+        <div id="synthese-list" class="synthese-list" aria-live="polite"></div>
+      </div>
+    </section>
+
     <section class="tab-panel" id="tab-mentions" role="tabpanel" aria-live="polite">
       <div class="mentions-panel">
         <div class="mention-admin">
@@ -87,7 +101,7 @@
 
   <footer class="footer">
     <div>Outil Mindmap Impact Mapping</div>
-    <div class="version">Version 1.7.0</div>
+    <div class="version">Version 1.8.0</div>
   </footer>
 
   <script src="script.js"></script>

@@ -55,6 +55,8 @@ const tierCategoryListEl = document.getElementById('tier-category-list');
 const addTierCategoryBtn = document.getElementById('add-tier-category');
 const newTierCategoryInput = document.getElementById('new-tier-category');
 const mentionListEl = document.getElementById('mention-list');
+const syntheseListEl = document.getElementById('synthese-list');
+const copyAllSyntheseBtn = document.getElementById('copy-all-synthese');
 const tabButtons = document.querySelectorAll('.tab-button');
 const tabPanels = document.querySelectorAll('.tab-panel');
 
@@ -278,6 +280,7 @@ function appendCategorySelect(container, node, options, key) {
     if (node[key] === select.value) return;
     node[key] = select.value;
     recordHistory();
+    renderSynthese();
   });
   tagRow.append(select);
   container.appendChild(tagRow);
@@ -507,6 +510,7 @@ function render() {
   preventNodeOverlap();
   renderConnections();
   renderMentionBackoffice();
+  renderSynthese();
   applyZoom();
   if (selectedId && !isNodeVisible(selectedId)) {
     const parentId = nodes.find((n) => n.id === selectedId)?.parentId;
@@ -613,6 +617,13 @@ newTierCategoryInput?.addEventListener('keydown', (e) => {
   }
 });
 
+copyAllSyntheseBtn?.addEventListener('click', () => {
+  const entries = buildSyntheseEntries();
+  if (!entries.length) return;
+  const fullText = entries.map((entry) => entry.phrase).join('\n');
+  copyToClipboard(fullText, copyAllSyntheseBtn);
+});
+
 tabButtons.forEach((btn) => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tabTarget));
 });
@@ -657,6 +668,7 @@ function updateNodeText(id, text) {
   node.text = trimmed;
   updateHelperPanel();
   renderMentionBackoffice();
+  renderSynthese();
   recordHistory();
 }
 
@@ -912,6 +924,104 @@ function renderMentionBackoffice() {
 
     groupEl.append(header, list);
     mentionListEl.appendChild(groupEl);
+  });
+}
+
+function buildSyntheseEntries() {
+  return nodes
+    .filter((n) => n.column === 3)
+    .map((moyen) => {
+      const comportement = nodes.find((n) => n.id === moyen.parentId && n.column === 2);
+      const tier = comportement ? nodes.find((n) => n.id === comportement.parentId && n.column === 1) : null;
+      if (!comportement || !tier) return null;
+
+      const moyenCategory = (moyen.tag || moyen.text || '').trim() || 'Moyen non catégorisé';
+      const tierCategory = (tier.tierCategory || tier.text || '').trim() || 'Tiers non catégorisé';
+      const comportementText = (comportement.text || '').trim() || 'Comportement non renseigné';
+
+      return {
+        id: moyen.id,
+        phrase: `${moyenCategory} de ${tierCategory} afin de ${comportementText}`,
+        meta: {
+          moyenCategory,
+          tierCategory,
+          comportementText,
+        },
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.meta.moyenCategory.localeCompare(b.meta.moyenCategory, 'fr', { sensitivity: 'base' }));
+}
+
+function showCopyFeedback(button, label = 'Copié !') {
+  if (!button) return;
+  const original = button.textContent;
+  button.textContent = label;
+  button.disabled = true;
+  setTimeout(() => {
+    button.textContent = original;
+    button.disabled = false;
+  }, 1200);
+}
+
+function copyToClipboard(text, button) {
+  if (!text) return;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(() => showCopyFeedback(button)).catch(() => {});
+    return;
+  }
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+  showCopyFeedback(button);
+}
+
+function renderSynthese() {
+  if (!syntheseListEl) return;
+  const entries = buildSyntheseEntries();
+  syntheseListEl.innerHTML = '';
+
+  if (copyAllSyntheseBtn) {
+    copyAllSyntheseBtn.disabled = entries.length === 0;
+  }
+
+  if (!entries.length) {
+    const empty = document.createElement('div');
+    empty.className = 'mention-admin-desc';
+    empty.textContent = 'Aucune chaîne complète Tier → Comportement → Moyen n\'est disponible pour le moment.';
+    syntheseListEl.appendChild(empty);
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const card = document.createElement('div');
+    card.className = 'synthese-card';
+
+    const text = document.createElement('p');
+    text.className = 'synthese-text';
+    text.textContent = entry.phrase;
+
+    const meta = document.createElement('div');
+    meta.className = 'synthese-meta';
+    meta.textContent = `Moyen : ${entry.meta.moyenCategory} • Tiers : ${entry.meta.tierCategory}`;
+
+    const actions = document.createElement('div');
+    actions.style.display = 'flex';
+    actions.style.alignItems = 'center';
+    actions.style.gap = '8px';
+
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.className = 'ghost';
+    copyBtn.textContent = 'Copier';
+    copyBtn.addEventListener('click', () => copyToClipboard(entry.phrase, copyBtn));
+
+    actions.appendChild(copyBtn);
+    card.append(text, meta, actions);
+    syntheseListEl.appendChild(card);
   });
 }
 
