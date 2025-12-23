@@ -324,6 +324,56 @@ function renderNodes() {
   renderObjectiveAddButton();
 }
 
+function preventNodeOverlap() {
+  const visibleNodes = getVisibleNodes();
+  const nodesByColumn = columns.map(() => []);
+
+  visibleNodes.forEach((node) => {
+    const el = nodesContainer.querySelector(`.node[data-id="${node.id}"]`);
+    if (el) {
+      nodesByColumn[node.column].push({ node, el });
+    }
+  });
+
+  nodesByColumn.forEach((items) => {
+    items.sort((a, b) => {
+      const posA = positions.get(a.node.id)?.y ?? 0;
+      const posB = positions.get(b.node.id)?.y ?? 0;
+      return posA - posB;
+    });
+
+    let lastBottom = -Infinity;
+    const gap = 32;
+
+    items.forEach(({ node, el }) => {
+      const pos = positions.get(node.id);
+      if (!pos) return;
+      const height = el.offsetHeight || el.getBoundingClientRect().height || 0;
+      const adjustedY = Math.max(pos.y, lastBottom + gap);
+      if (adjustedY !== pos.y) {
+        positions.set(node.id, { ...pos, y: adjustedY });
+      }
+      el.style.top = `${positions.get(node.id)?.y ?? adjustedY}px`;
+      lastBottom = (positions.get(node.id)?.y ?? adjustedY) + height;
+    });
+  });
+
+  const addButton = nodesContainer.querySelector('.objective-add');
+  if (addButton) {
+    const objectiveNodes = getVisibleNodes().filter((n) => n.column === 0);
+    const referenceId = objectiveNodes[0]?.id ?? nodes.find((n) => n.column === 0)?.id ?? null;
+    const referencePos = referenceId ? positions.get(referenceId) : null;
+    const baseX = referencePos?.x ?? 120;
+    const maxObjectiveY = objectiveNodes.reduce((max, node) => {
+      const pos = positions.get(node.id);
+      return pos ? Math.max(max, pos.y) : max;
+    }, referencePos?.y ?? 120);
+
+    addButton.style.top = `${maxObjectiveY + rowSpacing}px`;
+    addButton.style.left = `${baseX + 74}px`;
+  }
+}
+
 function renderObjectiveAddButton() {
   const objectiveNodes = getVisibleNodes().filter((n) => n.column === 0);
   const referenceId = objectiveNodes[0]?.id ?? nodes.find((n) => n.column === 0)?.id ?? null;
@@ -395,6 +445,7 @@ function renderConnections() {
 function render() {
   computeLayout();
   renderNodes();
+  preventNodeOverlap();
   renderConnections();
   applyZoom();
   if (selectedId && !isNodeVisible(selectedId)) {
