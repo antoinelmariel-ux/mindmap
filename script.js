@@ -80,6 +80,32 @@ function undo() {
 
 let positions = new Map();
 
+function ensureArrowDefs() {
+  let defs = connectionsSvg.querySelector('defs');
+  if (!defs) {
+    defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    connectionsSvg.appendChild(defs);
+  }
+
+  let marker = defs.querySelector('#arrowhead');
+  if (!marker) {
+    marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute('id', 'arrowhead');
+    marker.setAttribute('viewBox', '0 0 10 10');
+    marker.setAttribute('refX', '8');
+    marker.setAttribute('refY', '5');
+    marker.setAttribute('markerWidth', '9');
+    marker.setAttribute('markerHeight', '9');
+    marker.setAttribute('orient', 'auto-start-reverse');
+
+    const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    arrowPath.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+    arrowPath.setAttribute('fill', '#91a4c1');
+    marker.appendChild(arrowPath);
+    defs.appendChild(marker);
+  }
+}
+
 function sortValue(node, fallback) {
   return node.sortOrder ?? fallback;
 }
@@ -278,6 +304,33 @@ function renderNodes() {
 
     nodesContainer.appendChild(el);
   });
+
+  renderObjectiveAddButton();
+}
+
+function renderObjectiveAddButton() {
+  const objectiveNodes = getVisibleNodes().filter((n) => n.column === 0);
+  const referenceId = objectiveNodes[0]?.id ?? nodes.find((n) => n.column === 0)?.id ?? null;
+  const referencePos = referenceId ? positions.get(referenceId) : null;
+  const baseX = referencePos?.x ?? 120;
+  const maxObjectiveY = objectiveNodes.reduce((max, node) => {
+    const pos = positions.get(node.id);
+    return pos ? Math.max(max, pos.y) : max;
+  }, referencePos?.y ?? 120);
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'objective-add';
+  button.style.top = `${maxObjectiveY + rowSpacing}px`;
+  button.style.left = `${baseX + 74}px`;
+  button.title = 'Ajouter un objectif';
+  button.setAttribute('aria-label', 'Ajouter un nouvel objectif');
+  button.innerHTML = '+';
+  button.addEventListener('click', () => {
+    createNode({ column: 0, parentId: null });
+  });
+
+  nodesContainer.appendChild(button);
 }
 
 function updateSelection() {
@@ -294,11 +347,13 @@ function elbowPath(from, to) {
   const startY = from.y + 32;
   const endX = to.x - 12;
   const endY = to.y + 32;
-  return `M ${startX} ${startY} L ${endX} ${startY} L ${endX} ${endY}`;
+  const midX = (startX + endX) / 2;
+  return `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
 }
 
 function renderConnections() {
-  connectionsSvg.innerHTML = '';
+  connectionsSvg.replaceChildren();
+  ensureArrowDefs();
   if (!positions.size) return;
   const maxX = Math.max(...Array.from(positions.values()).map((p) => p.x)) + 500;
   const maxY = Math.max(...Array.from(positions.values()).map((p) => p.y)) + 400;
@@ -312,6 +367,7 @@ function renderConnections() {
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', elbowPath(from, to));
     path.setAttribute('class', 'path');
+    path.setAttribute('marker-end', 'url(#arrowhead)');
     connectionsSvg.appendChild(path);
   });
   if (linkPreviewPath) {
@@ -549,10 +605,12 @@ function handleLinkingMove(event) {
   if (!fromPos || !toPos) return;
   if (currentLinkTargetId) {
     linkPreviewPath.setAttribute('d', elbowPath(fromPos, toPos));
+    linkPreviewPath.setAttribute('marker-end', 'url(#arrowhead)');
   } else {
     const startX = fromPos.x + 180;
     const startY = fromPos.y + 32;
     linkPreviewPath.setAttribute('d', `M ${startX} ${startY} L ${pointerPos.x} ${pointerPos.y}`);
+    linkPreviewPath.removeAttribute('marker-end');
   }
   renderConnections();
 }

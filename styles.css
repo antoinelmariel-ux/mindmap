@@ -160,10 +160,40 @@ body {
   stroke: #91a4c1;
   stroke-width: 2.5;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .path.preview {
   stroke-dasharray: 6 4;
+}
+
+.objective-add {
+  position: absolute;
+  left: 120px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px dashed #c4c7d1;
+  color: #4f46e5;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.objective-add:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(79, 70, 229, 0.18);
+  border-color: #a5a9b6;
+}
+
+.objective-add:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow);
 }
 
 .collapse-toggle {
