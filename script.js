@@ -42,6 +42,8 @@ const deleteBranchBtn = document.getElementById('delete-branch');
 const tagListEl = document.getElementById('tag-list');
 const addTagBtn = document.getElementById('add-tag');
 const newTagInput = document.getElementById('new-tag');
+const tabButtons = document.querySelectorAll('.tab-button');
+const tabPanels = document.querySelectorAll('.tab-panel');
 
 function snapshotState() {
   return {
@@ -92,17 +94,31 @@ function ensureArrowDefs() {
     marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
     marker.setAttribute('id', 'arrowhead');
     marker.setAttribute('viewBox', '0 0 10 10');
-    marker.setAttribute('refX', '8');
+    marker.setAttribute('refX', '9');
     marker.setAttribute('refY', '5');
     marker.setAttribute('markerWidth', '9');
     marker.setAttribute('markerHeight', '9');
-    marker.setAttribute('orient', 'auto-start-reverse');
+    marker.setAttribute('orient', 'auto');
 
     const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     arrowPath.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
     arrowPath.setAttribute('fill', '#91a4c1');
     marker.appendChild(arrowPath);
     defs.appendChild(marker);
+  }
+}
+
+function switchTab(targetId) {
+  tabButtons.forEach((btn) => {
+    const isActive = btn.dataset.tabTarget === targetId;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+  tabPanels.forEach((panel) => {
+    panel.classList.toggle('active', panel.id === targetId);
+  });
+  if (targetId === 'tab-map' && selectedId) {
+    requestAnimationFrame(() => centerOnNode(selectedId));
   }
 }
 
@@ -255,11 +271,11 @@ function renderNodes() {
       const tagRow = document.createElement('div');
       tagRow.className = 'tag-row';
       const label = document.createElement('span');
-      label.textContent = 'Tag :';
+      label.textContent = 'Catégorie';
       label.className = 'tag-label';
       const select = document.createElement('select');
       select.className = 'tag-select';
-      select.innerHTML = `<option value="">Sélectionner un tag</option>`;
+      select.innerHTML = `<option value="">Catégorie</option>`;
       tagOptions.forEach((opt) => {
         const option = document.createElement('option');
         option.value = opt;
@@ -338,6 +354,7 @@ function updateSelection() {
   const selectedEl = document.querySelector(`.node[data-id="${selectedId}"]`);
   if (selectedEl) {
     selectedEl.classList.add('selected');
+    requestAnimationFrame(() => centerOnNode(selectedId));
   }
   updateHelperPanel();
 }
@@ -478,6 +495,11 @@ newTagInput?.addEventListener('keydown', (e) => {
   }
 });
 
+tabButtons.forEach((btn) => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tabTarget));
+});
+switchTab('tab-map');
+
 function applyZoom() {
   mapWrapper.style.transform = `scale(${zoom})`;
   zoomRange.value = Math.round(zoom * 100);
@@ -487,6 +509,9 @@ function applyZoom() {
 function setZoom(value) {
   zoom = Math.min(1.5, Math.max(0.4, value));
   applyZoom();
+  if (selectedId) {
+    requestAnimationFrame(() => centerOnNode(selectedId));
+  }
 }
 
 zoomRange.addEventListener('input', (e) => {
@@ -716,7 +741,9 @@ function fitToScreen() {
   const scaleX = availableW / (maxX - minX);
   const scaleY = availableH / (maxY - minY);
   setZoom(Math.min(1.2, Math.max(0.4, Math.min(scaleX, scaleY))));
-  workspace.scrollTo({ left: 0, top: 0 });
+  if (selectedId) {
+    requestAnimationFrame(() => centerOnNode(selectedId));
+  }
 }
 
 fitBtn.addEventListener('click', fitToScreen);
