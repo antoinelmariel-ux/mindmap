@@ -1,6 +1,7 @@
 :root {
   --objective: #f3f2fa;
   --tier: #f8d1e6;
+  --comportement: #e1f4ff;
   --moyen: #ffe4b3;
   --controle: #cfe9ff;
   --limite: #e6f7e7;
@@ -60,6 +61,7 @@ body {
 
 .legend-item.objective { background: var(--objective); }
 .legend-item.tier { background: var(--tier); }
+.legend-item.comportement { background: var(--comportement); }
 .legend-item.moyen { background: var(--moyen); }
 .legend-item.controle { background: var(--controle); }
 .legend-item.limite { background: var(--limite); }
@@ -125,7 +127,7 @@ body {
 
 .map-wrapper {
   position: relative;
-  width: 2200px;
+  width: 2600px;
   height: 1600px;
   margin: 0 auto;
   transform-origin: 0 0;
@@ -196,6 +198,7 @@ body {
 
 .node.objective { background: var(--objective); }
 .node.tier { background: var(--tier); }
+.node.comportement { background: var(--comportement); }
 .node.moyen { background: var(--moyen); }
 .node.controle { background: var(--controle); }
 .node.limite { background: var(--limite); }
