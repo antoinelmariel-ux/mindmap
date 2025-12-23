@@ -65,11 +65,62 @@ body {
 .legend-item.limite { background: var(--limite); }
 .legend-item.proba { background: var(--proba); }
 
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 64px;
+  position: relative;
+  flex: 1;
+}
+
+.tab-bar {
+  display: inline-flex;
+  gap: 10px;
+  background: #f8fafc;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  width: fit-content;
+}
+
+.tab-button {
+  border: none;
+  background: transparent;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tab-button.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.tab-panel {
+  display: none;
+  flex: 1;
+}
+
+.tab-panel.active {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .workspace {
   flex: 1;
   position: relative;
   overflow: auto;
   background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
 }
 
 .map-wrapper {
@@ -170,15 +221,15 @@ body {
 .objective-add {
   position: absolute;
   left: 120px;
-  width: 52px;
-  height: 52px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   border: 2px dashed #c4c7d1;
   color: #4f46e5;
   background: #ffffff;
   display: grid;
   place-items: center;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 800;
   cursor: pointer;
   box-shadow: var(--shadow);
@@ -249,7 +300,7 @@ body {
 }
 
 .zoom-panel {
-  position: absolute;
+  position: fixed;
   left: 24px;
   bottom: 24px;
   background: #fff;
@@ -260,7 +311,7 @@ body {
   align-items: center;
   gap: 6px;
   border: 1px solid var(--border);
-  z-index: 5;
+  z-index: 20;
 }
 
 .zoom-panel button {
@@ -305,20 +356,16 @@ body {
 }
 
 .note-helper {
-  position: absolute;
-  right: 24px;
-  bottom: 24px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 14px 16px;
-  max-width: 320px;
+  max-width: 520px;
   background: #0b172a;
   color: #e2e8f0;
   border-radius: 14px;
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  z-index: 6;
 }
 
 .note-helper .helper-title {
