@@ -26,6 +26,9 @@ let currentLinkTargetId = null;
 let zoom = 1.0;
 const columnSpacing = 260;
 const rowSpacing = 170;
+let annotations = [];
+let draggingAnnotationId = null;
+let annotationDragOffset = { x: 0, y: 0 };
 const mapWrapper = document.getElementById('map-wrapper');
 const nodesContainer = document.getElementById('nodes');
 const connectionsSvg = document.getElementById('connections');
@@ -42,6 +45,9 @@ const deleteBranchBtn = document.getElementById('delete-branch');
 const tagListEl = document.getElementById('tag-list');
 const addTagBtn = document.getElementById('add-tag');
 const newTagInput = document.getElementById('new-tag');
+const annotationsLayer = document.getElementById('annotations-layer');
+const addAnnotationBtn = document.getElementById('add-annotation');
+const clearAnnotationsBtn = document.getElementById('clear-annotations');
 const tabButtons = document.querySelectorAll('.tab-button');
 const tabPanels = document.querySelectorAll('.tab-panel');
 
@@ -544,6 +550,9 @@ newTagInput?.addEventListener('keydown', (e) => {
   }
 });
 
+addAnnotationBtn?.addEventListener('click', createAnnotation);
+clearAnnotationsBtn?.addEventListener('click', clearAllAnnotations);
+
 tabButtons.forEach((btn) => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tabTarget));
 });
@@ -632,6 +641,87 @@ function mapCoordinates(clientX, clientY) {
   const x = (clientX - rect.left) / zoom;
   const y = (clientY - rect.top) / zoom;
   return { x, y };
+}
+
+function renderAnnotations() {
+  if (!annotationsLayer) return;
+  annotationsLayer.innerHTML = '';
+  annotations.forEach((annotation, index) => {
+    const note = document.createElement('div');
+    note.className = 'sticky-note';
+    note.dataset.id = annotation.id;
+    note.style.left = `${annotation.x}px`;
+    note.style.top = `${annotation.y}px`;
+
+    const header = document.createElement('div');
+    header.className = 'note-header';
+    const label = document.createElement('span');
+    label.textContent = `#${index + 1}`;
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'note-close';
+    close.textContent = '×';
+    close.addEventListener('click', () => removeAnnotation(annotation.id));
+    header.addEventListener('mousedown', (event) => startAnnotationDrag(annotation.id, event));
+    header.append(label, close);
+
+    const textarea = document.createElement('textarea');
+    textarea.placeholder = 'Ajoutez votre remarque ici...';
+    textarea.value = annotation.text;
+    textarea.addEventListener('input', () => updateAnnotationText(annotation.id, textarea.value));
+
+    note.append(header, textarea);
+    annotationsLayer.appendChild(note);
+  });
+}
+
+function createAnnotation() {
+  const defaultX = 180 + annotations.length * 24;
+  const defaultY = 140 + annotations.length * 18;
+  annotations.push({ id: `a${Date.now()}`, text: '', x: defaultX, y: defaultY });
+  renderAnnotations();
+}
+
+function removeAnnotation(id) {
+  annotations = annotations.filter((note) => note.id !== id);
+  renderAnnotations();
+}
+
+function clearAllAnnotations() {
+  annotations = [];
+  renderAnnotations();
+}
+
+function updateAnnotationText(id, text) {
+  const target = annotations.find((note) => note.id === id);
+  if (!target) return;
+  target.text = text;
+}
+
+function startAnnotationDrag(id, event) {
+  const target = annotations.find((note) => note.id === id);
+  if (!target) return;
+  const pointer = mapCoordinates(event.clientX, event.clientY);
+  draggingAnnotationId = id;
+  annotationDragOffset = { x: pointer.x - target.x, y: pointer.y - target.y };
+  document.addEventListener('mousemove', handleAnnotationDrag);
+  document.addEventListener('mouseup', stopAnnotationDrag);
+}
+
+function handleAnnotationDrag(event) {
+  if (!draggingAnnotationId) return;
+  const target = annotations.find((note) => note.id === draggingAnnotationId);
+  if (!target) return;
+  const pointer = mapCoordinates(event.clientX, event.clientY);
+  target.x = Math.max(12, pointer.x - annotationDragOffset.x);
+  target.y = Math.max(12, pointer.y - annotationDragOffset.y);
+  renderAnnotations();
+}
+
+function stopAnnotationDrag() {
+  draggingAnnotationId = null;
+  document.removeEventListener('mousemove', handleAnnotationDrag);
+  document.removeEventListener('mouseup', stopAnnotationDrag);
 }
 
 function resetLinkingState() {
@@ -798,5 +888,6 @@ function fitToScreen() {
 fitBtn.addEventListener('click', fitToScreen);
 
 renderTagManager();
+renderAnnotations();
 render();
 recordHistory();

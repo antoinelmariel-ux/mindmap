@@ -123,12 +123,70 @@ body {
   box-shadow: var(--shadow);
 }
 
+.annotation-menu {
+  position: sticky;
+  top: 12px;
+  right: 12px;
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 60;
+}
+
+.annotation-menu-title {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.annotation-menu-actions {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.annotation-menu button {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
+}
+
+.annotation-menu button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.annotation-menu button:active {
+  transform: translateY(1px);
+}
+
+.annotation-menu button.ghost {
+  border-style: dashed;
+  opacity: 0.85;
+}
+
 .map-wrapper {
   position: relative;
   width: 2200px;
   height: 1600px;
   margin: 0 auto;
   transform-origin: 0 0;
+}
+
+.annotations-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
 }
 
 .nodes {
@@ -522,4 +580,68 @@ body {
     max-width: none;
     margin: 16px;
   }
+}
+
+.sticky-note {
+  position: absolute;
+  width: 220px;
+  min-height: 160px;
+  background: linear-gradient(135deg, #fff8b8 0%, #ffeaa7 100%);
+  border: 1px solid #f4d97b;
+  border-radius: 10px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
+  padding: 10px 12px 12px;
+  color: #5b4700;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sticky-note .note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 800;
+  color: #b38700;
+  letter-spacing: 0.02em;
+}
+
+.sticky-note .note-close {
+  border: none;
+  background: transparent;
+  color: #b38700;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.sticky-note .note-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sticky-note .note-close:active {
+  transform: translateY(1px);
+}
+
+.sticky-note textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: none;
+  border: none;
+  background: transparent;
+  color: #5b4700;
+  font-size: 14px;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.4;
+  font-style: italic;
+  outline: none;
+}
+
+.sticky-note textarea::placeholder {
+  color: #8f7a1c;
+  opacity: 0.8;
 }
