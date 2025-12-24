@@ -8,7 +8,9 @@ const columns = [
   { key: 'proba', label: 'Proba', color: 'proba', placeholder: 'Nouvelle probabilité' },
 ];
 
-let nodes = [{ id: 'n1', column: 0, text: 'Objectif principal', parentId: null, color: 'objective', sortOrder: 0 }];
+let nodes = [
+  { id: 'n1', column: 0, text: 'Objectif principal', parentId: null, extraParentIds: [], color: 'objective', sortOrder: 0 },
+];
 
 let selectedId = nodes[0].id;
 let collapsed = new Set();
@@ -489,15 +491,18 @@ function renderConnections() {
   connectionsSvg.setAttribute('width', maxX);
   connectionsSvg.setAttribute('height', maxY);
   getVisibleNodes().forEach((node) => {
-    if (!node.parentId) return;
-    const from = positions.get(node.parentId);
-    const to = positions.get(node.id);
-    if (!from || !to) return;
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', elbowPath(from, to));
-    path.setAttribute('class', 'path');
-    path.setAttribute('marker-end', 'url(#arrowhead)');
-    connectionsSvg.appendChild(path);
+    const parentIds = [node.parentId, ...(node.extraParentIds ?? [])].filter(Boolean);
+    parentIds.forEach((parentId) => {
+      if (!isNodeVisible(parentId)) return;
+      const from = positions.get(parentId);
+      const to = positions.get(node.id);
+      if (!from || !to) return;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', elbowPath(from, to));
+      path.setAttribute('class', 'path');
+      path.setAttribute('marker-end', 'url(#arrowhead)');
+      connectionsSvg.appendChild(path);
+    });
   });
   if (linkPreviewPath) {
     connectionsSvg.appendChild(linkPreviewPath);
@@ -535,7 +540,7 @@ function createNode({ column, parentId, afterId }) {
   const columnMeta = columns[column];
   const text = '';
   const sortOrder = computeInsertionOrder(column, parentId ?? null, afterId);
-  const node = { id: newId, column, parentId: parentId ?? null, text, color: columnMeta.color, sortOrder };
+  const node = { id: newId, column, parentId: parentId ?? null, extraParentIds: [], text, color: columnMeta.color, sortOrder };
   nodes.push(node);
   selectedId = newId;
   render();
@@ -682,6 +687,10 @@ function deleteNodeTree(id) {
   collect(id);
   nodes = nodes.filter((n) => !idsToRemove.has(n.id));
   idsToRemove.forEach((removedId) => collapsed.delete(removedId));
+  nodes.forEach((node) => {
+    if (!node.extraParentIds?.length) return;
+    node.extraParentIds = node.extraParentIds.filter((parentId) => !idsToRemove.has(parentId));
+  });
   if (!nodes.length) {
     selectedId = null;
   } else {
@@ -809,12 +818,36 @@ function reparentNode(targetId, newParentId) {
   recordHistory();
 }
 
+function canLinkNodes(parentId, childId) {
+  let ancestor = parentId;
+  while (ancestor) {
+    if (ancestor === childId) return false;
+    ancestor = nodes.find((n) => n.id === ancestor)?.parentId ?? null;
+  }
+  return true;
+}
+
+function linkNodeToParent(childId, parentId) {
+  const child = nodes.find((n) => n.id === childId);
+  const parent = nodes.find((n) => n.id === parentId);
+  if (!child || !parent) return;
+  if (!canLinkNodes(parentId, childId)) return;
+  if (!child.parentId) {
+    reparentNode(childId, parentId);
+    return;
+  }
+  if (child.parentId === parentId || child.extraParentIds?.includes(parentId)) return;
+  child.extraParentIds = [...(child.extraParentIds ?? []), parentId];
+  render();
+  recordHistory();
+}
+
 function handleLinkingEnd() {
   if (linkingFromId && currentLinkTargetId) {
     const fromNode = nodes.find((n) => n.id === linkingFromId);
     const toNode = nodes.find((n) => n.id === currentLinkTargetId);
     if (fromNode && toNode && toNode.column > fromNode.column) {
-      reparentNode(currentLinkTargetId, linkingFromId);
+      linkNodeToParent(currentLinkTargetId, linkingFromId);
     }
   }
   resetLinkingState();
