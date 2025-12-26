@@ -326,7 +326,7 @@ function renderNodes() {
       title.textContent = node.text;
     });
     title.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && e.altKey) {
+      if (e.key === 'Enter' && (e.altKey || e.shiftKey)) {
         e.preventDefault();
         document.execCommand('insertLineBreak');
         return;
