@@ -153,6 +153,7 @@ body {
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: var(--shadow);
   color: #111827;
+  z-index: 1;
 }
 
 .node .node-text {
@@ -218,6 +219,10 @@ body {
   outline: 3px solid rgba(59, 130, 246, 0.4);
   transform: translateY(-4px);
   box-shadow: 0 16px 40px rgba(59, 130, 246, 0.25);
+}
+
+.node.editing {
+  z-index: 5;
 }
 
 .node.link-target {

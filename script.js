@@ -35,6 +35,7 @@ let linkPreviewPath = null;
 let currentLinkTargetId = null;
 let zoom = 1.0;
 let hasCenteredInitialObjective = false;
+let editingId = null;
 const NODE_WIDTH = 300;
 const MAX_NODE_TEXT_LENGTH = 145;
 const TRUNCATED_NODE_TEXT_LENGTH = 140;
@@ -301,6 +302,9 @@ function renderNodes() {
     const { x, y } = position;
     const el = document.createElement('div');
     el.className = `node ${node.color} ${selectedId === node.id ? 'selected' : ''}`;
+    if (editingId === node.id) {
+      el.classList.add('editing');
+    }
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
     el.dataset.id = node.id;
@@ -316,6 +320,7 @@ function renderNodes() {
     title.dataset.placeholder = columns[node.column].placeholder;
     title.textContent = getNodeDisplayText(node);
     title.addEventListener('focus', () => {
+      setEditingNode(node.id);
       selectedId = node.id;
       updateSelection();
       title.textContent = node.text;
@@ -334,6 +339,9 @@ function renderNodes() {
     title.addEventListener('blur', () => {
       const sanitized = title.textContent || '';
       updateNodeText(node.id, sanitized);
+      if (editingId === node.id) {
+        setEditingNode(null);
+      }
       if (!sanitized.trim()) {
         title.textContent = '';
         expandedNodes.delete(node.id);
@@ -510,6 +518,19 @@ function updateSelection() {
     requestAnimationFrame(() => centerOnNode(selectedId));
   }
   updateHelperPanel();
+}
+
+function setEditingNode(nodeId) {
+  if (editingId === nodeId) return;
+  if (editingId) {
+    const previousEl = nodesContainer.querySelector(`.node[data-id="${editingId}"]`);
+    previousEl?.classList.remove('editing');
+  }
+  editingId = nodeId;
+  if (editingId) {
+    const currentEl = nodesContainer.querySelector(`.node[data-id="${editingId}"]`);
+    currentEl?.classList.add('editing');
+  }
 }
 
 function elbowPath(from, to) {
