@@ -34,7 +34,10 @@ let linkingFromId = null;
 let linkPreviewPath = null;
 let currentLinkTargetId = null;
 let zoom = 1.0;
+let hasCenteredInitialObjective = false;
 const NODE_WIDTH = 300;
+const MAX_NODE_TEXT_LENGTH = 145;
+const TRUNCATED_NODE_TEXT_LENGTH = 140;
 const columnSpacing = NODE_WIDTH + 60;
 const rowSpacing = 170;
 const mapWrapper = document.getElementById('map-wrapper');
@@ -61,6 +64,7 @@ const syntheseListEl = document.getElementById('synthese-list');
 const copyAllSyntheseBtn = document.getElementById('copy-all-synthese');
 const tabButtons = document.querySelectorAll('.tab-button');
 const tabPanels = document.querySelectorAll('.tab-panel');
+const expandedNodes = new Set();
 
 function snapshotState() {
   return {
@@ -310,10 +314,11 @@ function renderNodes() {
     title.className = 'node-text';
     title.contentEditable = 'true';
     title.dataset.placeholder = columns[node.column].placeholder;
-    title.textContent = node.text;
+    title.textContent = getNodeDisplayText(node);
     title.addEventListener('focus', () => {
       selectedId = node.id;
       updateSelection();
+      title.textContent = node.text;
     });
     title.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && e.altKey) {
@@ -331,10 +336,56 @@ function renderNodes() {
       updateNodeText(node.id, sanitized);
       if (!sanitized.trim()) {
         title.textContent = '';
+        expandedNodes.delete(node.id);
+        return;
+      }
+      title.textContent = getNodeDisplayText(node);
+      const nodeEl = title.closest('.node');
+      const expandBtn = nodeEl?.querySelector('.node-expand');
+      if (shouldShowExpandToggle(node)) {
+        if (!expandBtn && nodeEl) {
+          const newExpandBtn = document.createElement('button');
+          newExpandBtn.type = 'button';
+          newExpandBtn.className = 'node-expand';
+          updateExpandButton(newExpandBtn, node);
+          newExpandBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleNodeExpanded(node.id);
+            updateExpandButton(newExpandBtn, node);
+            title.textContent = getNodeDisplayText(node);
+          });
+          newExpandBtn.addEventListener('mousedown', (event) => {
+            event.stopPropagation();
+          });
+          nodeEl.appendChild(newExpandBtn);
+        } else if (expandBtn) {
+          updateExpandButton(expandBtn, node);
+        }
+      } else if (expandBtn) {
+        expandBtn.remove();
       }
     });
 
     el.appendChild(title);
+
+    if (shouldShowExpandToggle(node)) {
+      const expandBtn = document.createElement('button');
+      expandBtn.type = 'button';
+      expandBtn.className = 'node-expand';
+      updateExpandButton(expandBtn, node);
+      expandBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleNodeExpanded(node.id);
+        updateExpandButton(expandBtn, node);
+        title.textContent = getNodeDisplayText(node);
+      });
+      expandBtn.addEventListener('mousedown', (event) => {
+        event.stopPropagation();
+      });
+      el.appendChild(expandBtn);
+    }
 
     if (node.column === 1) {
       appendCategorySelect(el, node, tierCategoryOptions, 'tierCategory');
@@ -671,6 +722,9 @@ function updateNodeText(id, text) {
   const trimmed = text.trim();
   if (trimmed === node.text) return;
   node.text = trimmed;
+  if (node.text.length <= MAX_NODE_TEXT_LENGTH) {
+    expandedNodes.delete(node.id);
+  }
   updateHelperPanel();
   renderMentionBackoffice();
   renderSynthese();
@@ -1117,3 +1171,44 @@ renderTagManager();
 renderTierCategoryManager();
 render();
 recordHistory();
+ensureFirstObjectiveVisible();
+
+function getNodeDisplayText(node) {
+  const text = node.text || '';
+  if (text.length <= MAX_NODE_TEXT_LENGTH) {
+    return text;
+  }
+  if (expandedNodes.has(node.id)) {
+    return text;
+  }
+  return `${text.slice(0, TRUNCATED_NODE_TEXT_LENGTH)}(...)`;
+}
+
+function shouldShowExpandToggle(node) {
+  return (node.text || '').length > MAX_NODE_TEXT_LENGTH;
+}
+
+function toggleNodeExpanded(nodeId) {
+  if (expandedNodes.has(nodeId)) {
+    expandedNodes.delete(nodeId);
+  } else {
+    expandedNodes.add(nodeId);
+  }
+}
+
+function updateExpandButton(button, node) {
+  const isExpanded = expandedNodes.has(node.id);
+  button.textContent = isExpanded ? '–' : '+';
+  button.setAttribute('aria-label', isExpanded ? 'Réduire le texte' : 'Afficher tout le texte');
+  button.title = isExpanded ? 'Réduire le texte' : 'Afficher tout le texte';
+}
+
+function ensureFirstObjectiveVisible() {
+  if (hasCenteredInitialObjective) return;
+  const firstObjective = nodes.find((node) => node.column === 0);
+  if (!firstObjective) return;
+  hasCenteredInitialObjective = true;
+  selectedId = firstObjective.id;
+  updateSelection();
+  requestAnimationFrame(() => centerOnNode(firstObjective.id));
+}
