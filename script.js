@@ -1,18 +1,62 @@
-const columns = [
-  { key: 'objective', label: 'Objectif', color: 'objective', placeholder: 'Nouvel objectif' },
-  { key: 'tier', label: 'Tiers', color: 'tier', placeholder: 'Nouveau tiers' },
-  { key: 'comportement', label: 'Comportement', color: 'comportement', placeholder: 'Nouveau comportement' },
-  { key: 'moyen', label: 'Moyen', color: 'moyen', placeholder: 'Nouveau moyen' },
-  { key: 'controle', label: 'Contrôle', color: 'controle', placeholder: 'Nouveau contrôle' },
-  { key: 'limite', label: 'Limite', color: 'limite', placeholder: 'Nouvelle limite' },
-  { key: 'proba', label: 'Proba', color: 'proba', placeholder: 'Nouvelle probabilité' },
-];
+const mapTemplates = {
+  'lfb-fournisseur': {
+    name: 'LFB Fournisseur',
+    columns: [
+      { key: 'objective', label: 'Objectif', color: 'objective', placeholder: 'Nouvel objectif' },
+      { key: 'tier', label: 'Tiers', color: 'tier', placeholder: 'Nouveau tiers' },
+      { key: 'comportement', label: 'Comportement', color: 'comportement', placeholder: 'Nouveau comportement' },
+      { key: 'moyen', label: 'Moyen', color: 'moyen', placeholder: 'Nouveau moyen' },
+      { key: 'controle', label: 'Contrôle', color: 'controle', placeholder: 'Nouveau contrôle' },
+      { key: 'limite', label: 'Limite', color: 'limite', placeholder: 'Nouvelle limite' },
+      { key: 'proba', label: 'Proba', color: 'proba', placeholder: 'Nouvelle probabilité' },
+    ],
+    synthese: {
+      tierKey: 'tier',
+      comportementKey: 'comportement',
+      moyenKey: 'moyen',
+    },
+  },
+  'lfb-client': {
+    name: 'LFB Client',
+    columns: [
+      { key: 'tier', label: 'Tiers', color: 'tier', placeholder: 'Nouveau tiers' },
+      { key: 'objective', label: 'Objectif', color: 'objective', placeholder: 'Nouvel objectif' },
+      { key: 'comportement', label: 'Comportement', color: 'comportement', placeholder: 'Nouveau comportement' },
+      { key: 'moyen', label: 'Moyens', color: 'moyen', placeholder: 'Nouveau moyen' },
+      { key: 'controle', label: 'Contrôle', color: 'controle', placeholder: 'Nouveau contrôle' },
+      { key: 'contournement', label: 'Contournement', color: 'limite', placeholder: 'Nouveau contournement' },
+      { key: 'proba', label: 'Probabilité', color: 'proba', placeholder: 'Nouvelle probabilité' },
+    ],
+    synthese: {
+      tierKey: 'tier',
+      comportementKey: 'comportement',
+      moyenKey: 'moyen',
+    },
+  },
+  'lfb-controleur': {
+    name: 'LFB contrôleur',
+    columns: [
+      { key: 'controle', label: 'Contrôle', color: 'controle', placeholder: 'Nouveau contrôle' },
+      { key: 'description', label: 'Description', color: 'objective', placeholder: 'Nouvelle description' },
+      { key: 'difficultes', label: 'Difficultés', color: 'tier', placeholder: 'Nouvelles difficultés' },
+      { key: 'efficacite', label: 'Efficacité', color: 'comportement', placeholder: 'Nouvelle efficacité' },
+      { key: 'indicateurs', label: 'Indicateurs', color: 'moyen', placeholder: 'Nouveaux indicateurs' },
+      { key: 'non-conformite', label: 'Non-conformité', color: 'limite', placeholder: 'Nouvelle non-conformité' },
+      { key: 'rex', label: 'REX', color: 'proba', placeholder: 'Nouveau REX' },
+      { key: 'faiblesses', label: 'Faiblesses', color: 'objective', placeholder: 'Nouvelles faiblesses' },
+    ],
+    synthese: null,
+  },
+};
 
-let nodes = [
-  { id: 'n1', column: 0, text: 'Objectif principal', parentId: null, extraParentIds: [], color: 'objective', sortOrder: 0 },
-];
+const templateOrder = ['lfb-fournisseur', 'lfb-client', 'lfb-controleur'];
+let activeTemplateKey = templateOrder[0];
+let columns = mapTemplates[activeTemplateKey].columns;
 
-let selectedId = nodes[0].id;
+let nodes = [];
+
+const templateStates = {};
+let selectedId = null;
 let collapsed = new Set();
 let tagOptions = [
   'Corruption active',
@@ -66,6 +110,8 @@ const copyAllSyntheseBtn = document.getElementById('copy-all-synthese');
 const tabButtons = document.querySelectorAll('.tab-button');
 const tabPanels = document.querySelectorAll('.tab-panel');
 const expandedNodes = new Set();
+const legendContainer = document.querySelector('.legend');
+const mapSelector = document.getElementById('map-selector');
 
 function snapshotState() {
   return {
@@ -75,6 +121,84 @@ function snapshotState() {
     tagOptions: [...tagOptions],
     tierCategoryOptions: [...tierCategoryOptions],
   };
+}
+
+function buildInitialNodes(templateKey) {
+  const templateColumns = mapTemplates[templateKey].columns;
+  const firstColumn = templateColumns[0];
+  return [
+    {
+      id: 'n1',
+      column: 0,
+      text: `${firstColumn.label} principal`,
+      parentId: null,
+      extraParentIds: [],
+      color: firstColumn.color,
+      sortOrder: 0,
+    },
+  ];
+}
+
+function storeActiveTemplateState() {
+  templateStates[activeTemplateKey] = {
+    nodes: nodes.map((n) => ({ ...n })),
+    selectedId,
+    collapsed: Array.from(collapsed),
+    history: history.map((entry) => ({
+      ...entry,
+      nodes: entry.nodes.map((n) => ({ ...n })),
+      collapsed: Array.from(entry.collapsed),
+    })),
+    expandedNodes: Array.from(expandedNodes),
+  };
+}
+
+function loadTemplateState(templateKey) {
+  const saved = templateStates[templateKey];
+  if (saved) {
+    nodes = saved.nodes.map((n) => ({ ...n }));
+    selectedId = saved.selectedId;
+    collapsed = new Set(saved.collapsed);
+    history = saved.history.map((entry) => ({
+      ...entry,
+      nodes: entry.nodes.map((n) => ({ ...n })),
+      collapsed: Array.from(entry.collapsed),
+    }));
+    expandedNodes.clear();
+    saved.expandedNodes.forEach((id) => expandedNodes.add(id));
+    return;
+  }
+  nodes = buildInitialNodes(templateKey);
+  selectedId = nodes[0]?.id ?? null;
+  collapsed = new Set();
+  history = [];
+  expandedNodes.clear();
+}
+
+function setActiveTemplate(templateKey) {
+  if (!mapTemplates[templateKey] || templateKey === activeTemplateKey) return;
+  storeActiveTemplateState();
+  activeTemplateKey = templateKey;
+  columns = mapTemplates[activeTemplateKey].columns;
+  hasCenteredInitialObjective = false;
+  loadTemplateState(templateKey);
+  renderLegend();
+  render();
+  if (!history.length) {
+    recordHistory();
+  }
+  ensureFirstObjectiveVisible();
+}
+
+function renderLegend() {
+  if (!legendContainer) return;
+  legendContainer.innerHTML = '';
+  columns.forEach((column) => {
+    const item = document.createElement('span');
+    item.className = `legend-item ${column.color}`;
+    item.textContent = column.label;
+    legendContainer.appendChild(item);
+  });
 }
 
 function recordHistory() {
@@ -395,11 +519,11 @@ function renderNodes() {
       el.appendChild(expandBtn);
     }
 
-    if (node.column === 1) {
+    if (columns[node.column]?.key === 'tier') {
       appendCategorySelect(el, node, tierCategoryOptions, 'tierCategory');
     }
 
-    if (node.column === 3) {
+    if (columns[node.column]?.key === 'moyen') {
       appendCategorySelect(el, node, tagOptions, 'tag');
     }
 
@@ -706,6 +830,13 @@ tabButtons.forEach((btn) => {
 });
 switchTab('tab-map');
 
+if (mapSelector) {
+  mapSelector.value = activeTemplateKey;
+  mapSelector.addEventListener('change', (event) => {
+    setActiveTemplate(event.target.value);
+  });
+}
+
 function applyZoom() {
   mapWrapper.style.transform = `scale(${zoom})`;
   zoomRange.value = Math.round(zoom * 100);
@@ -942,7 +1073,7 @@ function renderTagManager() {
     removeBtn.addEventListener('click', () => {
       tagOptions = tagOptions.filter((t) => t !== tag);
       nodes.forEach((n) => {
-        if (n.column === 3 && n.tag === tag) {
+        if (columns[n.column]?.key === 'moyen' && n.tag === tag) {
           n.tag = '';
         }
       });
@@ -969,7 +1100,7 @@ function renderTierCategoryManager() {
     removeBtn.addEventListener('click', () => {
       tierCategoryOptions = tierCategoryOptions.filter((t) => t !== category);
       nodes.forEach((n) => {
-        if (n.column === 1 && n.tierCategory === category) {
+        if (columns[n.column]?.key === 'tier' && n.tierCategory === category) {
           n.tierCategory = '';
         }
       });
@@ -1047,11 +1178,22 @@ function buildSyntheseEntries() {
     return null;
   }
 
+  const syntheseConfig = mapTemplates[activeTemplateKey]?.synthese;
+  if (!syntheseConfig) {
+    return [];
+  }
+  const tierColumn = columns.findIndex((col) => col.key === syntheseConfig.tierKey);
+  const comportementColumn = columns.findIndex((col) => col.key === syntheseConfig.comportementKey);
+  const moyenColumn = columns.findIndex((col) => col.key === syntheseConfig.moyenKey);
+  if (tierColumn === -1 || comportementColumn === -1 || moyenColumn === -1) {
+    return [];
+  }
+
   return nodes
-    .filter((n) => n.column === 3)
+    .filter((n) => n.column === moyenColumn)
     .map((moyen) => {
-      const comportement = findAncestorWithColumn(moyen, 2);
-      const tier = comportement ? findAncestorWithColumn(comportement, 1) : null;
+      const comportement = findAncestorWithColumn(moyen, comportementColumn);
+      const tier = comportement ? findAncestorWithColumn(comportement, tierColumn) : null;
       if (!comportement || !tier) return null;
 
       const moyenCategory = (moyen.tag || moyen.text || '').trim() || 'Moyen non catégorisé';
@@ -1100,6 +1242,18 @@ function copyToClipboard(text, button) {
 
 function renderSynthese() {
   if (!syntheseListEl) return;
+  const syntheseConfig = mapTemplates[activeTemplateKey]?.synthese;
+  if (!syntheseConfig) {
+    syntheseListEl.innerHTML = '';
+    const empty = document.createElement('div');
+    empty.className = 'mention-admin-desc';
+    empty.textContent = 'Synthèse indisponible pour cette carte.';
+    syntheseListEl.appendChild(empty);
+    if (copyAllSyntheseBtn) {
+      copyAllSyntheseBtn.disabled = true;
+    }
+    return;
+  }
   const entries = buildSyntheseEntries();
   syntheseListEl.innerHTML = '';
 
@@ -1188,6 +1342,8 @@ function fitToScreen() {
 
 fitBtn.addEventListener('click', fitToScreen);
 
+loadTemplateState(activeTemplateKey);
+renderLegend();
 renderTagManager();
 renderTierCategoryManager();
 render();

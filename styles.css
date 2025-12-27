@@ -36,11 +36,39 @@ body {
   top: 0;
   background: #fff;
   z-index: 10;
+  gap: 16px;
 }
 
 .brand {
   font-size: 18px;
   font-weight: 700;
+}
+
+.map-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.map-controls label {
+  font-size: 13px;
+}
+
+#map-selector {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  font-weight: 600;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  color: #111827;
+}
+
+#map-selector:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
 }
 
 .legend {
