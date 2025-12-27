@@ -9,14 +9,15 @@
 <body>
   <header class="topbar">
     <div class="brand">Impact Mapping</div>
+    <div class="map-controls">
+      <label for="map-selector">Carte</label>
+      <select id="map-selector" aria-label="Choisir une carte">
+        <option value="lfb-fournisseur">LFB Fournisseur</option>
+        <option value="lfb-client">LFB Client</option>
+        <option value="lfb-controleur">LFB contrôleur</option>
+      </select>
+    </div>
     <div class="legend">
-      <span class="legend-item objective">Objectif</span>
-      <span class="legend-item tier">Tiers</span>
-      <span class="legend-item comportement">Comportement</span>
-      <span class="legend-item moyen">Moyen</span>
-      <span class="legend-item controle">Contrôle</span>
-      <span class="legend-item limite">Limite</span>
-      <span class="legend-item proba">Proba</span>
     </div>
   </header>
 
@@ -101,7 +102,7 @@
 
   <footer class="footer">
     <div>Outil Mindmap Impact Mapping</div>
-    <div class="version">Version 1.8.5</div>
+    <div class="version">Version 1.8.6</div>
   </footer>
 
   <script src="script.js"></script>
