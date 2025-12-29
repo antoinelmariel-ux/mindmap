@@ -720,6 +720,19 @@ function render() {
   updateSelection();
 }
 
+function commitEditingNodeText() {
+  if (!editingId) return;
+  const editingEl = nodesContainer.querySelector(`.node[data-id="${editingId}"] .node-text`);
+  if (!editingEl) return;
+  const currentText = editingEl.textContent || '';
+  updateNodeText(editingId, currentText);
+  const node = nodes.find((n) => n.id === editingId);
+  if (node) {
+    editingEl.textContent = getNodeDisplayText(node);
+  }
+  setEditingNode(null);
+}
+
 function updateHelperPanel() {
   const current = nodes.find((n) => n.id === selectedId);
   const hasSelection = Boolean(current);
@@ -732,6 +745,7 @@ function updateHelperPanel() {
 }
 
 function createNode({ column, parentId, afterId }) {
+  commitEditingNodeText();
   const newId = `n${Date.now()}`;
   const columnMeta = columns[column];
   const text = '';
