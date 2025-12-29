@@ -1158,9 +1158,11 @@ function renderMentionBackoffice() {
     list.className = 'mention-node-list';
 
     const orderedNodes = [...nodesWithMention].sort((a, b) => {
+      const textDiff = (a.text || '').localeCompare(b.text || '', 'fr', { sensitivity: 'base' });
+      if (textDiff !== 0) return textDiff;
       const columnDiff = a.column - b.column;
       if (columnDiff !== 0) return columnDiff;
-      return (a.text || '').localeCompare(b.text || '', 'fr', { sensitivity: 'base' });
+      return a.id.localeCompare(b.id, 'fr', { sensitivity: 'base' });
     });
 
     orderedNodes.forEach((node) => {
