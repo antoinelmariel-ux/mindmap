@@ -868,12 +868,13 @@ function createNode({ column, parentId, afterId }) {
 function handleKeydown(e) {
   const active = document.activeElement;
   const isEditing = active?.isContentEditable;
+  const isFormField = ['INPUT', 'TEXTAREA', 'SELECT'].includes(active?.tagName);
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
     e.preventDefault();
     undo();
     return;
   }
-  if (isEditing && e.key !== 'Tab' && e.key !== 'Delete') {
+  if ((isEditing && e.key !== 'Tab' && e.key !== 'Delete') || isFormField) {
     return;
   }
   if (!selectedId) return;
@@ -978,11 +979,7 @@ zoomInBtn.addEventListener('click', () => setZoom(zoom + 0.1));
 function centerOnNode(id) {
   const element = nodesContainer.querySelector(`[data-id="${id}"]`);
   if (!element) return;
-  const workspaceRect = workspace.getBoundingClientRect();
-  const nodeRect = element.getBoundingClientRect();
-  const targetX = workspace.scrollLeft + (nodeRect.left - workspaceRect.left) - workspace.clientWidth / 2 + nodeRect.width / 2;
-  const targetY = workspace.scrollTop + (nodeRect.top - workspaceRect.top) - workspace.clientHeight / 2 + nodeRect.height / 2;
-  workspace.scrollTo({ left: targetX, top: targetY, behavior: 'smooth' });
+  element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
 }
 
 function updateNodeText(id, text) {
