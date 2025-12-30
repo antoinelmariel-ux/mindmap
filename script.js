@@ -14,6 +14,7 @@ const mapTemplates = {
       tierKey: 'tier',
       comportementKey: 'comportement',
       moyenKey: 'moyen',
+      tierConnector: 'de',
     },
   },
   'lfb-client': {
@@ -25,12 +26,13 @@ const mapTemplates = {
       { key: 'moyen', label: 'Moyens', color: 'moyen', placeholder: 'Nouveau moyen' },
       { key: 'controle', label: 'Contrôle', color: 'controle', placeholder: 'Nouveau contrôle' },
       { key: 'contournement', label: 'Contournement', color: 'limite', placeholder: 'Nouveau contournement' },
-      { key: 'proba', label: 'Probabilité', color: 'proba', placeholder: 'Nouvelle probabilité' },
+      { key: 'proba', label: 'Crédibilité', color: 'proba', placeholder: 'Nouvelle crédibilité' },
     ],
     synthese: {
       tierKey: 'tier',
       comportementKey: 'comportement',
       moyenKey: 'moyen',
+      tierConnector: 'par',
     },
   },
   'lfb-controleur': {
@@ -52,6 +54,17 @@ const mapTemplates = {
 const templateOrder = ['lfb-fournisseur', 'lfb-client', 'lfb-controleur'];
 let activeTemplateKey = templateOrder[0];
 let columns = mapTemplates[activeTemplateKey].columns;
+const questionConfigByTemplate = Object.fromEntries(
+  Object.entries(mapTemplates).map(([key, template]) => {
+    const config = {};
+    template.columns.forEach((column) => {
+      config[column.key] = '';
+    });
+    return [key, config];
+  })
+);
+let activeQuestionCategoryKey = null;
+let activeQuestionNodeId = null;
 
 let nodes = [];
 
@@ -112,6 +125,11 @@ const tabPanels = document.querySelectorAll('.tab-panel');
 const expandedNodes = new Set();
 const legendContainer = document.querySelector('.legend');
 const mapSelector = document.getElementById('map-selector');
+const questionPanelEl = document.getElementById('question-panel');
+const questionPanelTitleEl = document.getElementById('question-panel-title');
+const questionPanelBodyEl = document.getElementById('question-panel-body');
+const questionConfigListEl = document.getElementById('question-config-list');
+const syntheseDescEl = document.getElementById('synthese-desc');
 
 function snapshotState() {
   return {
@@ -181,8 +199,13 @@ function setActiveTemplate(templateKey) {
   activeTemplateKey = templateKey;
   columns = mapTemplates[activeTemplateKey].columns;
   hasCenteredInitialObjective = false;
+  activeQuestionCategoryKey = null;
+  activeQuestionNodeId = null;
   loadTemplateState(templateKey);
   renderLegend();
+  renderQuestionConfigManager();
+  renderQuestionPanel();
+  updateSyntheseDescription();
   render();
   if (!history.length) {
     recordHistory();
@@ -450,6 +473,29 @@ function appendCategorySelect(container, node, options, key) {
   container.appendChild(tagRow);
 }
 
+function handleBadgeClick(node, titleEl) {
+  const columnKey = columns[node.column]?.key;
+  if (!columnKey) return;
+  const isSameBadge =
+    activeQuestionCategoryKey === columnKey &&
+    activeQuestionNodeId === node.id &&
+    questionPanelEl &&
+    !questionPanelEl.hidden;
+  if (isSameBadge) {
+    activeQuestionCategoryKey = null;
+    activeQuestionNodeId = null;
+    renderQuestionPanel();
+    return;
+  }
+  activeQuestionCategoryKey = columnKey;
+  activeQuestionNodeId = node.id;
+  selectedId = node.id;
+  updateSelection();
+  renderQuestionPanel();
+  centerOnNode(node.id);
+  titleEl?.focus({ preventScroll: true });
+}
+
 function renderNodes() {
   nodesContainer.innerHTML = '';
   const visibleNodes = getVisibleNodes();
@@ -469,6 +515,8 @@ function renderNodes() {
     const badge = document.createElement('div');
     badge.className = 'badge';
     badge.innerHTML = `<span class="dot" aria-hidden="true"></span>${columns[node.column].label}`;
+    badge.setAttribute('role', 'button');
+    badge.tabIndex = 0;
     el.appendChild(badge);
 
     const title = document.createElement('div');
@@ -529,6 +577,17 @@ function renderNodes() {
         }
       } else if (expandBtn) {
         expandBtn.remove();
+      }
+    });
+
+    badge.addEventListener('click', (event) => {
+      event.stopPropagation();
+      handleBadgeClick(node, title);
+    });
+    badge.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        handleBadgeClick(node, title);
       }
     });
 
@@ -1171,6 +1230,77 @@ function renderTierCategoryManager() {
   });
 }
 
+function renderQuestionConfigManager() {
+  if (!questionConfigListEl) return;
+  questionConfigListEl.innerHTML = '';
+  const config = questionConfigByTemplate[activeTemplateKey] ?? {};
+  columns.forEach((column) => {
+    const item = document.createElement('div');
+    item.className = 'question-config-item';
+    const label = document.createElement('label');
+    label.textContent = `Questions pour ${column.label}`;
+    const textarea = document.createElement('textarea');
+    textarea.rows = 4;
+    textarea.placeholder = 'Une question par ligne';
+    textarea.value = config[column.key] || '';
+    textarea.addEventListener('input', () => {
+      config[column.key] = textarea.value;
+      if (activeQuestionCategoryKey === column.key) {
+        renderQuestionPanel();
+      }
+    });
+    item.append(label, textarea);
+    questionConfigListEl.appendChild(item);
+  });
+}
+
+function getQuestionsForCategory(categoryKey) {
+  const config = questionConfigByTemplate[activeTemplateKey] ?? {};
+  const raw = config[categoryKey] || '';
+  return raw
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function renderQuestionPanel() {
+  if (!questionPanelEl || !questionPanelTitleEl || !questionPanelBodyEl) return;
+  if (!activeQuestionCategoryKey) {
+    questionPanelEl.hidden = true;
+    return;
+  }
+  const column = columns.find((col) => col.key === activeQuestionCategoryKey);
+  questionPanelTitleEl.textContent = column ? `Questions à poser • ${column.label}` : 'Questions à poser';
+  questionPanelBodyEl.innerHTML = '';
+  const questions = getQuestionsForCategory(activeQuestionCategoryKey);
+  if (!questions.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'Aucune question configurée pour cette catégorie.';
+    questionPanelBodyEl.appendChild(empty);
+  } else {
+    const list = document.createElement('ul');
+    questions.forEach((question) => {
+      const item = document.createElement('li');
+      item.textContent = question;
+      list.appendChild(item);
+    });
+    questionPanelBodyEl.appendChild(list);
+  }
+  questionPanelEl.hidden = false;
+}
+
+function updateSyntheseDescription() {
+  if (!syntheseDescEl) return;
+  const syntheseConfig = mapTemplates[activeTemplateKey]?.synthese;
+  if (!syntheseConfig) {
+    syntheseDescEl.textContent = 'Synthèse indisponible pour cette carte.';
+    return;
+  }
+  const connector = syntheseConfig.tierConnector ?? 'de';
+  syntheseDescEl.textContent = `Générez automatiquement les phrases « Catégorie du moyen ${connector} Catégorie du tiers afin de Comportement » pour chaque chaîne.`;
+}
+
 function renderMentionBackoffice() {
   if (!mentionListEl) return;
   mentionListEl.innerHTML = '';
@@ -1245,6 +1375,7 @@ function buildSyntheseEntries() {
   const tierColumn = columns.findIndex((col) => col.key === syntheseConfig.tierKey);
   const comportementColumn = columns.findIndex((col) => col.key === syntheseConfig.comportementKey);
   const moyenColumn = columns.findIndex((col) => col.key === syntheseConfig.moyenKey);
+  const tierConnector = syntheseConfig.tierConnector ?? 'de';
   if (tierColumn === -1 || comportementColumn === -1 || moyenColumn === -1) {
     return [];
   }
@@ -1262,7 +1393,7 @@ function buildSyntheseEntries() {
 
       return {
         id: moyen.id,
-        phrase: `${moyenCategory} de ${tierCategory} afin de ${comportementText}`,
+        phrase: `${moyenCategory} ${tierConnector} ${tierCategory} afin de ${comportementText}`,
         meta: {
           moyenCategory,
           tierCategory,
@@ -1406,6 +1537,9 @@ loadTemplateState(activeTemplateKey);
 renderLegend();
 renderTagManager();
 renderTierCategoryManager();
+renderQuestionConfigManager();
+renderQuestionPanel();
+updateSyntheseDescription();
 render();
 recordHistory();
 ensureFirstObjectiveVisible();

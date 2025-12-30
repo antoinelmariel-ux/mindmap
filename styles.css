@@ -104,6 +104,45 @@ body {
   flex: 1;
 }
 
+.question-panel {
+  width: 100%;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.question-panel[hidden] {
+  display: none;
+}
+
+.question-panel-title {
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.question-panel-body {
+  color: #334155;
+  display: grid;
+  gap: 8px;
+}
+
+.question-panel-body ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.question-panel-body .empty {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .tab-bar {
   display: inline-flex;
   gap: 10px;
@@ -234,6 +273,7 @@ body {
   background: rgba(255, 255, 255, 0.6);
   margin-bottom: 6px;
   color: #111827;
+  cursor: pointer;
 }
 
 .node .badge .dot {
@@ -538,6 +578,37 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.question-config-list {
+  display: grid;
+  gap: 10px;
+}
+
+.question-config-item {
+  display: grid;
+  gap: 6px;
+}
+
+.question-config-item label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.question-config-item textarea {
+  resize: vertical;
+  min-height: 84px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.question-config-item textarea::placeholder {
+  color: rgba(226, 232, 240, 0.7);
 }
 
 .tag-item {
