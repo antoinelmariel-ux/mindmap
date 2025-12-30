@@ -230,6 +230,7 @@ function undo() {
 }
 
 let positions = new Map();
+let groupBounds = new Map();
 
 function ensureArrowDefs() {
   let defs = connectionsSvg.querySelector('defs');
@@ -348,50 +349,82 @@ function computeInsertionOrder(column, parentId, afterId) {
   return (currentOrder + nextOrder) / 2;
 }
 
+function getRootId(node) {
+  let current = node;
+  while (current?.parentId) {
+    const parent = nodes.find((n) => n.id === current.parentId);
+    if (!parent) break;
+    current = parent;
+  }
+  return current?.id ?? node.id;
+}
+
 function computeLayout() {
   positions = new Map();
+  groupBounds = new Map();
   const visibleNodes = getVisibleNodes();
+  if (!visibleNodes.length) return;
+
   const byColumn = columns.map(() => []);
-  visibleNodes.forEach((n) => byColumn[n.column]?.push(n));
+  const groupMap = new Map();
+  const rootOrder = [];
+  const rootsById = new Map();
 
-  const heights = columns.map((_, idx) => {
-    const count = byColumn[idx].length || 1;
-    return Math.max(mapWrapper.clientHeight, count * rowSpacing + 400);
+  visibleNodes.forEach((node) => {
+    byColumn[node.column]?.push(node);
+    const rootId = getRootId(node);
+    if (!groupMap.has(rootId)) {
+      groupMap.set(rootId, columns.map(() => []));
+    }
+    groupMap.get(rootId)[node.column].push(node);
   });
 
-  byColumn.forEach((colNodes) => colNodes.sort((a, b) => sortValue(a, 0) - sortValue(b, 0) || a.id.localeCompare(b.id)));
-
-  // Position first column
-  const firstCol = byColumn[0];
-  const baseHeight = heights[0];
-  const offsetY = baseHeight / 2 - ((firstCol.length - 1) * rowSpacing) / 2;
-  firstCol.forEach((node, i) => {
-    const x = 120;
-    const y = offsetY + i * rowSpacing;
-    positions.set(node.id, { x, y });
-  });
-
-  // Subsequent columns
-  for (let c = 1; c < columns.length; c++) {
-    const colNodes = byColumn[c];
-    colNodes.sort((a, b) => {
-      const ay = positions.get(a.parentId)?.y ?? 0;
-      const by = positions.get(b.parentId)?.y ?? 0;
-      if (ay === by && a.parentId === b.parentId) {
-        return sortValue(a, 0) - sortValue(b, 0) || a.id.localeCompare(b.id);
+  const visibleRoots = visibleNodes.filter((n) => !n.parentId || n.column === 0);
+  visibleRoots
+    .sort((a, b) => sortValue(a, 0) - sortValue(b, 0) || a.id.localeCompare(b.id))
+    .forEach((root) => {
+      const rootId = getRootId(root);
+      if (!rootsById.has(rootId)) {
+        rootsById.set(rootId, root);
+        rootOrder.push(rootId);
       }
-      return ay - by;
     });
-    let currentY = 140;
-    colNodes.forEach((node) => {
-      const parentPos = positions.get(node.parentId);
-      const desiredY = parentPos ? parentPos.y : currentY;
-      const y = Math.max(currentY, desiredY - rowSpacing / 2);
-      const x = 120 + c * columnSpacing;
-      positions.set(node.id, { x, y });
-      currentY = y + rowSpacing;
+
+  Array.from(groupMap.keys()).forEach((rootId) => {
+    if (!rootsById.has(rootId)) {
+      rootOrder.push(rootId);
+    }
+  });
+
+  groupMap.forEach((columnsByGroup) => {
+    columnsByGroup.forEach((colNodes) =>
+      colNodes.sort((a, b) => sortValue(a, 0) - sortValue(b, 0) || a.id.localeCompare(b.id))
+    );
+  });
+
+  let currentY = 140;
+  const groupGap = 80;
+  rootOrder.forEach((rootId) => {
+    const columnsByGroup = groupMap.get(rootId);
+    if (!columnsByGroup) return;
+    const maxCount = Math.max(1, ...columnsByGroup.map((colNodes) => colNodes.length || 0));
+    const contentHeight = maxCount * rowSpacing;
+    const groupHeight = contentHeight + 120;
+    const groupTop = currentY;
+    const contentTop = groupTop + (groupHeight - contentHeight) / 2;
+    groupBounds.set(rootId, { top: groupTop, bottom: groupTop + groupHeight });
+
+    columnsByGroup.forEach((colNodes, columnIndex) => {
+      const offset = ((maxCount - colNodes.length) * rowSpacing) / 2;
+      colNodes.forEach((node, index) => {
+        const x = 120 + columnIndex * columnSpacing;
+        const y = contentTop + offset + index * rowSpacing;
+        positions.set(node.id, { x, y });
+      });
     });
-  }
+
+    currentY += groupHeight + groupGap;
+  });
 }
 
 function appendCategorySelect(container, node, options, key) {
@@ -561,35 +594,46 @@ function renderNodes() {
 
 function preventNodeOverlap() {
   const visibleNodes = getVisibleNodes();
-  const nodesByColumn = columns.map(() => []);
+  const nodesByGroupAndColumn = new Map();
+  const rootOrder = [];
 
   visibleNodes.forEach((node) => {
     const el = nodesContainer.querySelector(`.node[data-id="${node.id}"]`);
-    if (el) {
-      nodesByColumn[node.column].push({ node, el });
+    if (!el) return;
+    const rootId = getRootId(node);
+    if (!nodesByGroupAndColumn.has(rootId)) {
+      nodesByGroupAndColumn.set(rootId, columns.map(() => []));
+      rootOrder.push(rootId);
     }
+    nodesByGroupAndColumn.get(rootId)[node.column].push({ node, el });
   });
 
-  nodesByColumn.forEach((items) => {
-    items.sort((a, b) => {
-      const posA = positions.get(a.node.id)?.y ?? 0;
-      const posB = positions.get(b.node.id)?.y ?? 0;
-      return posA - posB;
-    });
+  const gap = 32;
+  rootOrder.forEach((rootId) => {
+    const columnsByGroup = nodesByGroupAndColumn.get(rootId);
+    const bounds = groupBounds.get(rootId);
+    columnsByGroup?.forEach((items) => {
+      items.sort((a, b) => {
+        const posA = positions.get(a.node.id)?.y ?? 0;
+        const posB = positions.get(b.node.id)?.y ?? 0;
+        return posA - posB;
+      });
 
-    let lastBottom = -Infinity;
-    const gap = 32;
-
-    items.forEach(({ node, el }) => {
-      const pos = positions.get(node.id);
-      if (!pos) return;
-      const height = el.offsetHeight || el.getBoundingClientRect().height || 0;
-      const adjustedY = Math.max(pos.y, lastBottom + gap);
-      if (adjustedY !== pos.y) {
-        positions.set(node.id, { ...pos, y: adjustedY });
-      }
-      el.style.top = `${positions.get(node.id)?.y ?? adjustedY}px`;
-      lastBottom = (positions.get(node.id)?.y ?? adjustedY) + height;
+      let lastBottom = bounds?.top ?? -Infinity;
+      items.forEach(({ node, el }) => {
+        const pos = positions.get(node.id);
+        if (!pos) return;
+        const height = el.offsetHeight || el.getBoundingClientRect().height || 0;
+        let adjustedY = Math.max(pos.y, lastBottom + gap);
+        if (bounds?.bottom) {
+          adjustedY = Math.min(adjustedY, bounds.bottom - height);
+        }
+        if (adjustedY !== pos.y) {
+          positions.set(node.id, { ...pos, y: adjustedY });
+        }
+        el.style.top = `${positions.get(node.id)?.y ?? adjustedY}px`;
+        lastBottom = (positions.get(node.id)?.y ?? adjustedY) + height;
+      });
     });
   });
 
