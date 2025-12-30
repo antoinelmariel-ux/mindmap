@@ -8,7 +8,7 @@ const mapTemplates = {
       { key: 'moyen', label: 'Moyen', color: 'moyen', placeholder: 'Nouveau moyen' },
       { key: 'controle', label: 'Contrôle', color: 'controle', placeholder: 'Nouveau contrôle' },
       { key: 'limite', label: 'Limite', color: 'limite', placeholder: 'Nouvelle limite' },
-      { key: 'proba', label: 'Proba', color: 'proba', placeholder: 'Nouvelle probabilité' },
+      { key: 'proba', label: 'Crédibilité', color: 'proba', placeholder: 'Nouvelle crédibilité' },
     ],
     synthese: {
       tierKey: 'tier',
@@ -78,6 +78,7 @@ let tagOptions = [
   'favoritisme',
   "prise illégale d'intérêt",
 ];
+const credibilityOptions = ['Haute', 'Moyenne', 'Faible'];
 let tierCategoryOptions = [
   'Professionnel de santé',
   'Administratif',
@@ -617,6 +618,10 @@ function renderNodes() {
 
     if (columns[node.column]?.key === 'moyen') {
       appendCategorySelect(el, node, tagOptions, 'tag');
+    }
+
+    if (columns[node.column]?.key === 'proba') {
+      appendCategorySelect(el, node, credibilityOptions, 'credibilityTag');
     }
 
     if (hasChildren(node.id)) {
