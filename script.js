@@ -1321,7 +1321,7 @@ function renderQuestionConfigManager() {
     label.textContent = `Questions pour ${column.label}`;
     const textarea = document.createElement('textarea');
     textarea.rows = 4;
-    textarea.placeholder = 'Une question par ligne';
+    textarea.placeholder = 'Une question par ligne, listes en Markdown (-, *, +) acceptées';
     textarea.value = config[column.key] || '';
     textarea.addEventListener('input', () => {
       config[column.key] = textarea.value;
@@ -1336,11 +1336,7 @@ function renderQuestionConfigManager() {
 
 function getQuestionsForCategory(categoryKey) {
   const config = questionConfigByTemplate[activeTemplateKey] ?? {};
-  const raw = config[categoryKey] || '';
-  return raw
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
+  return config[categoryKey] || '';
 }
 
 function escapeHtml(value) {
@@ -1359,6 +1355,49 @@ function formatQuestionMarkup(text) {
     .replace(/\*(.+?)\*/g, '<em>$1</em>');
 }
 
+function buildQuestionList(raw) {
+  const root = document.createElement('ul');
+  const listStack = [root];
+  const lines = raw.split('\n');
+
+  lines.forEach((line) => {
+    if (!line.trim()) return;
+    const match = line.match(/^(\s*)([-*+])\s+(.+)$/);
+    let level = 0;
+    let content = line.trim();
+
+    if (match) {
+      const indent = match[1].replace(/\t/g, '  ').length;
+      level = Math.floor(indent / 2);
+      content = match[3].trim();
+    }
+
+    if (level > 0 && !listStack[listStack.length - 1].lastElementChild) {
+      level = 0;
+    }
+
+    while (level + 1 < listStack.length) {
+      listStack.pop();
+    }
+
+    while (level + 1 > listStack.length) {
+      const parentList = listStack[listStack.length - 1];
+      const lastItem = parentList.lastElementChild;
+      if (!lastItem) break;
+      const nested = document.createElement('ul');
+      lastItem.appendChild(nested);
+      listStack.push(nested);
+    }
+
+    const targetList = listStack[listStack.length - 1];
+    const item = document.createElement('li');
+    item.innerHTML = formatQuestionMarkup(content);
+    targetList.appendChild(item);
+  });
+
+  return root;
+}
+
 function renderQuestionPanel() {
   if (!questionPanelEl || !questionPanelTitleEl || !questionPanelBodyEl) return;
   if (!activeQuestionCategoryKey) {
@@ -1368,20 +1407,14 @@ function renderQuestionPanel() {
   const column = columns.find((col) => col.key === activeQuestionCategoryKey);
   questionPanelTitleEl.textContent = column ? `Questions à poser • ${column.label}` : 'Questions à poser';
   questionPanelBodyEl.innerHTML = '';
-  const questions = getQuestionsForCategory(activeQuestionCategoryKey);
-  if (!questions.length) {
+  const rawQuestions = getQuestionsForCategory(activeQuestionCategoryKey);
+  if (!rawQuestions.trim()) {
     const empty = document.createElement('div');
     empty.className = 'empty';
     empty.textContent = 'Aucune question configurée pour cette catégorie.';
     questionPanelBodyEl.appendChild(empty);
   } else {
-    const list = document.createElement('ul');
-    questions.forEach((question) => {
-      const item = document.createElement('li');
-      item.innerHTML = formatQuestionMarkup(question);
-      list.appendChild(item);
-    });
-    questionPanelBodyEl.appendChild(list);
+    questionPanelBodyEl.appendChild(buildQuestionList(rawQuestions));
   }
   questionPanelEl.hidden = false;
 }
