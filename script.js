@@ -110,6 +110,37 @@ Avez-vous déjà eu connaissance de sollicitations de quelconque nature ?
 Quel est le niveau de pression à l’atteinte de l’objectif ? Pourrait-il amener à des pratiques non-respectueuses des process ?
 Quel lien entre rémunération et atteinte de l’objectif (bonus, success fee, commission …) ?`,
 };
+questionConfigByTemplate['lfb-client'] = {
+  tier: `**« Avec quels tiers êtes-vous en contact ? (directement ou indirectement) »**
+Est-ce que certains tiers ont une influence considérable pour le LFB ?
+Avez-vous recours à des intermédiaires (agents, consultants, apporteurs d’affaires) ?`,
+  objective: `**« Quels sont leurs attentes vis-à-vis de vous ? »**
+Quels comportements rêvés ?`,
+  comportement: `**« Quels comportements rêvés ? »**
+Être sélectionné ou reconduit sans mise en concurrence
+Obtenir une **souplesse contractuelle**
+Être **payé plus ou plus vite**
+Voir certaines **non-conformités ignorées**
+Être recommandé en interne
+Tirer un avantage personnel de leur influence sur vous`,
+  moyen: `**« Quels types d’avantages indus (direct ou indirect) certains pourraient-ils être tentés d’offrir pour obtenir ces comportements ? »**
+Cadeaux / invitations : Recevez-vous des cadeaux, invitations ou proposition d’avantage de la part de ce tiers ?
+Avantages indirects : Un interlocuteur vous a-t-il déjà demandé de prendre une personne en stage ou d’offrir un emploi ?
+Financiers : Avez-vous déjà entendu parler de rétro-commission ?`,
+  controle: `**« Quelles règles ou procédures sont censées empêcher ce scénario ? »**
+Procédure formelle ou pratique informelle ? Critères objectifs ?
+Comment cela se passe concrètement ?
+Qui contrôle ? à quel moment ? systématique ?
+Est-ce réellement appliqué ? Est-ce réellement efficace ?
+Comment identifiez-vous les tiers avec lesquels vous collaborez ? Critères ? Décisions collectives ?
+Comment déterminez-vous le montant de sa rémunération ?
+Comment documentez-vous la réalité de la prestation fournie ?`,
+  contournement: `**« À votre avis, comment un acteur malintentionné pourrait-il contourner les contrôles existants ? »**`,
+  proba: `**« In fine, quelle est selon vous la probabilité qu’un risque de corruption survienne dans votre périmètre d’activité ? »**
+Déjà vu dans le secteur ?
+Avez-vous déjà eu connaissance de sollicitations de quelconque nature ?
+Avez-vous déjà été victime ou témoin d’une tentative de fraude ?`,
+};
 let activeQuestionCategoryKey = null;
 let activeQuestionNodeId = null;
 
