@@ -895,7 +895,20 @@ function updateSelection() {
     selectedEl.classList.add('selected');
     requestAnimationFrame(() => centerOnNode(selectedId));
   }
+  syncQuestionPanelToSelection();
   updateHelperPanel();
+}
+
+function syncQuestionPanelToSelection() {
+  if (!activeQuestionCategoryKey || !selectedId) return;
+  const node = nodes.find((n) => n.id === selectedId);
+  if (!node) return;
+  const columnKey = columns[node.column]?.key;
+  if (!columnKey) return;
+  if (columnKey === activeQuestionCategoryKey && activeQuestionNodeId === node.id) return;
+  activeQuestionCategoryKey = columnKey;
+  activeQuestionNodeId = node.id;
+  renderQuestionPanel();
 }
 
 function setEditingNode(nodeId) {
@@ -1130,7 +1143,15 @@ zoomInBtn.addEventListener('click', () => setZoom(zoom + 0.1));
 function centerOnNode(id) {
   const element = nodesContainer.querySelector(`[data-id="${id}"]`);
   if (!element) return;
-  element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  if (!workspace) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    return;
+  }
+  const workspaceRect = workspace.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+  const deltaX = elementRect.left - workspaceRect.left - (workspaceRect.width / 2 - elementRect.width / 2);
+  const deltaY = elementRect.top - workspaceRect.top - (workspaceRect.height / 2 - elementRect.height / 2);
+  workspace.scrollBy({ left: deltaX, top: deltaY, behavior: 'smooth' });
 }
 
 function updateNodeText(id, text) {
