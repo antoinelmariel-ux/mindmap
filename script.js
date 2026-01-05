@@ -63,6 +63,53 @@ const questionConfigByTemplate = Object.fromEntries(
     return [key, config];
   })
 );
+questionConfigByTemplate['lfb-fournisseur'] = {
+  objective: `**« Quels sont vos objectifs métier qui peuvent être influencés par un tiers ? »**
+Objectifs opérationnels (gagner un AO, obtenir une autorisation, négocier un prix…) - A quelle fréquence ?
+Objectifs relationnels (maintenir une relation clé)
+Objectifs temps (accélérer, sécuriser, débloquer)
+Objectifs indirectement influencés par un tiers ? Du fait de validation, autorisation, influence, … (Administration / Politique / Influenceurs / Prestataires / …)
+Pensez-vous à d’autres activités où vous êtes en contact avec des tiers ? (directement ou indirectement)
+Quelles activités sont les plus risquées, ou demanderaient le plus de précautions ?`,
+  tier: `**« Qui sont les tiers qui ont un impact sur ces objectifs ? »**
+Administration / Client / Prestataires / …
+Agent public ? Privé ?
+Influenceurs ?
+Faites-vous appel à des intermédiaires / Prestataires / Apporteurs d’affaires ?
+Objectif porté par un distributeur / JV / Consultant (délégation du risque) ?`,
+  comportement: `**« Quels comportements rêvés pourriez vous espérer de ces tiers ? »**
+Décision plus rapide ?
+Interprétation favorable ?
+Souplesse sur une règle ?
+Priorisation de votre dossier ?`,
+  moyen: `**« Quels avantages indus pourraient être proposés pour obtenir ces comportements ? »** (Pas “ce que vous feriez”, mais ce qui pourrait exister)
+Avantages financiers : commission, rétrocommission, surfacturation, prestation (fictive ou non)
+*Disposez-vous d’une marge de manoeuvre ? Possibilité de paiement en espèce ?*
+Avantages en nature : cadeaux, invitations, hospitalité
+*Disposez-vous d’un tel budget ?*
+Avantages indirects : dons, sponsoring, emploi, stage, recommandation
+*Fréquence ? Bénéficiaires ? critères ?*
+Avantages différés : promesse future, relation entretenue`,
+  controle: `**« Quelles règles ou procédures sont censées empêcher ce scénario ? »**
+Procédure formelle ou pratique informelle ? Critères objectifs ?
+Comment cela se passe concrètement ?
+Qui contrôle ? à quel moment ? systématique ?
+Est-ce réellement appliqué ? Est-ce réellement efficace ?
+Comment identifiez-vous les tiers avec lesquels vous collaborez ? Critères ?
+Comment déterminez-vous le montant de sa rémunération ?
+Comment documentez-vous la réalité de la prestation fournie ?`,
+  limite: `**« Comment un acteur malintentionné pourrait-il contourner ces contrôles ? »**
+Via un tiers ?
+Détournement des procédures ?
+Prestations fictives ?
+Possibilité de réaliser des opérations non tracées ? (en cash)
+Possibilité de réaliser des paiements dans d’autres pays que celui d’implémentation ?`,
+  proba: `**« Ce scénario vous paraît il crédible dans votre environnement ? »**
+Déjà vu dans le secteur ?
+Avez-vous déjà eu connaissance de sollicitations de quelconque nature ?
+Quel est le niveau de pression à l’atteinte de l’objectif ? Pourrait-il amener à des pratiques non-respectueuses des process ?
+Quel lien entre rémunération et atteinte de l’objectif (bonus, success fee, commission …) ?`,
+};
 let activeQuestionCategoryKey = null;
 let activeQuestionNodeId = null;
 
@@ -1265,6 +1312,22 @@ function getQuestionsForCategory(categoryKey) {
     .filter(Boolean);
 }
 
+function escapeHtml(value) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatQuestionMarkup(text) {
+  const escaped = escapeHtml(text);
+  return escaped
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+}
+
 function renderQuestionPanel() {
   if (!questionPanelEl || !questionPanelTitleEl || !questionPanelBodyEl) return;
   if (!activeQuestionCategoryKey) {
@@ -1284,7 +1347,7 @@ function renderQuestionPanel() {
     const list = document.createElement('ul');
     questions.forEach((question) => {
       const item = document.createElement('li');
-      item.textContent = question;
+      item.innerHTML = formatQuestionMarkup(question);
       list.appendChild(item);
     });
     questionPanelBodyEl.appendChild(list);
