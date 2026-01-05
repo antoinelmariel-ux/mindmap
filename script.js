@@ -142,6 +142,73 @@ Exemples:
 - Avez-vous déjà eu connaissance de sollicitations de quelconque nature ?
 - Avez-vous déjà été victime ou témoin d’une tentative de fraude ?`,
 };
+questionConfigByTemplate['lfb-controleur'] = {
+  controle: `**Quels sont les principaux mécanismes de contrôle que vous avez mis en place pour prévenir et détecter les risques de corruption sur les opérations ?**
+- Quelles validations existent avant un engagement ?
+- Quels contrôles existent sur les flux financiers ?
+- Y-a-t-il des séparations de tâches prévues pour éviter les prises de décisions isolées ?`,
+  description: `**Pouvez-vous me décrire ce contrôle et la façon dont il est mis en œuvre ?**
+- Qui est responsable du contrôle ?
+- Quel est le périmètre exact de ce contrôle ?
+- Ce contrôle est-il :
+  - préventif (a priori) ou détectif (a posteriori) ?
+  - manuel ou automatisé ?
+  - systématique ou sur échantillonnage ?
+- Quelle est la fréquence du contrôle ?
+- Quelle est la preuve laissée par le contrôle (trace, validation, log, signature) ?
+- Existe-t-il une documentation formelle (procédure, mode opératoire) ?
+- S’agit-il d’un contrôle :
+  - centralisé ou local ?
+  - Existe-t-il des contrôles spécifiques pays / zones à risque ?`,
+  difficultes: `**Avez-vous constaté des difficultés dans la mise en œuvre de ces mesures ?**
+- Difficultés liées :
+  - aux ressources (temps, effectifs, compétences) ?
+  - aux outils (SI, données incomplètes, absence d’automatisation) ?
+  - aux processus métiers (pression business, urgences, exceptions) ?
+- Le contrôle est-il parfois :
+  - contourné ?
+  - perçu comme trop lourd ?
+  - appliqué de façon hétérogène selon les équipes / pays ?
+  - Existe-t-il des zones grises ou des cas non couverts par la procédure ?
+  - Avez-vous identifié des freins culturels à l’application du contrôle ?`,
+  efficacite: `**Comment évaluez-vous l’efficacité de ce mécanisme ?**
+- Ce contrôle permet-il réellement de :
+  - empêcher un comportement non conforme ?
+  - détecter un écart avant qu’il ne produise ses effets ?
+- Est-il plutôt efficace :
+  - sur des risques simples ?
+  - ou aussi sur des schémas complexes (tiers, surfacturation, rétro-commissions) ?
+- Avez-vous déjà constaté des incidents malgré ce contrôle ?
+- Le contrôle a-t-il déjà permis de :
+  - bloquer une opération ?
+  - refuser un paiement / un tiers ?
+- Comment qualifieriez-vous son efficacité : faible / moyenne / élevée ?`,
+  indicateurs: `**Disposez-vous d’indicateurs permettant de suivre l’efficacité et le fonctionnement de ce contrôle ?**`,
+  'non-conformite': `**Quelles sont les non-conformités ou écarts les plus fréquemment constatés ?**
+- Ces non-conformités concernent-elles :
+  - des oublis formels ?
+  - des contournements volontaires ?
+  - une mauvaise compréhension des règles ?
+- Sont-elles :
+  - récurrentes ?
+  - concentrées sur certains métiers / pays ?
+- Quels processus sont les plus exposés ?
+- Existe-t-il des schémas typiques (ex : cadeaux non déclarés, tiers non évalués, factures incomplètes) ?
+- Ces non-conformités sont-elles documentées ? tracées ? suivies dans le temps ?`,
+  rex: `**Quelle a été la réaction de l’entreprise face à ces incidents ?**`,
+  faiblesses: `**Avez-vous identifié d’autres faiblesses dans le dispositif ?**
+- Faiblesses liées :
+  - à l’organisation ?
+  - aux outils ?
+  - aux ressources ?
+  - à la culture ?
+- Existe-t-il des zones non couvertes par les contrôles ?
+- Des risques émergents non intégrés ?
+- Des dépendances excessives à :
+  - un contrôle manuel ?
+  - une personne clé ?
+- Si vous deviez renforcer un seul point du dispositif, lequel serait-il ?`,
+};
 let activeQuestionCategoryKey = null;
 let activeQuestionNodeId = null;
 
