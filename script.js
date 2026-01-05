@@ -64,82 +64,83 @@ const questionConfigByTemplate = Object.fromEntries(
   })
 );
 questionConfigByTemplate['lfb-fournisseur'] = {
-  objective: `**« Quels sont vos objectifs métier qui peuvent être influencés par un tiers ? »**
-Objectifs opérationnels (gagner un AO, obtenir une autorisation, négocier un prix…) - A quelle fréquence ?
-Objectifs relationnels (maintenir une relation clé)
-Objectifs temps (accélérer, sécuriser, débloquer)
-Objectifs indirectement influencés par un tiers ? Du fait de validation, autorisation, influence, … (Administration / Politique / Influenceurs / Prestataires / …)
-Pensez-vous à d’autres activités où vous êtes en contact avec des tiers ? (directement ou indirectement)
-Quelles activités sont les plus risquées, ou demanderaient le plus de précautions ?`,
-  tier: `**« Qui sont les tiers qui ont un impact sur ces objectifs ? »**
-Administration / Client / Prestataires / …
-Agent public ? Privé ?
-Influenceurs ?
-Faites-vous appel à des intermédiaires / Prestataires / Apporteurs d’affaires ?
-Objectif porté par un distributeur / JV / Consultant (délégation du risque) ?`,
-  comportement: `**« Quels comportements rêvés pourriez vous espérer de ces tiers ? »**
-Décision plus rapide ?
-Interprétation favorable ?
-Souplesse sur une règle ?
-Priorisation de votre dossier ?`,
-  moyen: `**« Quels avantages indus pourraient être proposés pour obtenir ces comportements ? »** (Pas “ce que vous feriez”, mais ce qui pourrait exister)
-Avantages financiers : commission, rétrocommission, surfacturation, prestation (fictive ou non)
-*Disposez-vous d’une marge de manoeuvre ? Possibilité de paiement en espèce ?*
-Avantages en nature : cadeaux, invitations, hospitalité
-*Disposez-vous d’un tel budget ?*
-Avantages indirects : dons, sponsoring, emploi, stage, recommandation
-*Fréquence ? Bénéficiaires ? critères ?*
-Avantages différés : promesse future, relation entretenue`,
-  controle: `**« Quelles règles ou procédures sont censées empêcher ce scénario ? »**
-Procédure formelle ou pratique informelle ? Critères objectifs ?
-Comment cela se passe concrètement ?
-Qui contrôle ? à quel moment ? systématique ?
-Est-ce réellement appliqué ? Est-ce réellement efficace ?
-Comment identifiez-vous les tiers avec lesquels vous collaborez ? Critères ?
-Comment déterminez-vous le montant de sa rémunération ?
-Comment documentez-vous la réalité de la prestation fournie ?`,
-  limite: `**« Comment un acteur malintentionné pourrait-il contourner ces contrôles ? »**
-Via un tiers ?
-Détournement des procédures ?
-Prestations fictives ?
-Possibilité de réaliser des opérations non tracées ? (en cash)
-Possibilité de réaliser des paiements dans d’autres pays que celui d’implémentation ?`,
-  proba: `**« Ce scénario vous paraît il crédible dans votre environnement ? »**
-Déjà vu dans le secteur ?
-Avez-vous déjà eu connaissance de sollicitations de quelconque nature ?
-Quel est le niveau de pression à l’atteinte de l’objectif ? Pourrait-il amener à des pratiques non-respectueuses des process ?
-Quel lien entre rémunération et atteinte de l’objectif (bonus, success fee, commission …) ?`,
+  objective: `**Quels sont vos objectifs métier qui peuvent être influencés par un tiers ?**
+- Objectifs opérationnels (gagner un AO, obtenir une autorisation, négocier un prix…) 
+  - A quelle fréquence ?
+- Objectifs relationnels (maintenir une relation clé)
+- Objectifs temps (accélérer, sécuriser, débloquer)
+- Objectifs indirectement influencés par un tiers ? Du fait de validation, autorisation, influence, … (Administration / Politique / Influenceurs / Prestataires / …)
+- Pensez-vous à d’autres activités où vous êtes en contact avec des tiers ? (directement ou indirectement)
+- Quelles activités sont les plus risquées, ou demanderaient le plus de précautions ?`,
+  tier: `**Qui sont les tiers qui ont un impact sur ces objectifs ?**
+- Administration / Client / Prestataires / …
+- Agent public ? Privé ?
+- Influenceurs ?
+- Faites-vous appel à des intermédiaires / Prestataires / Apporteurs d’affaires ?
+- Objectif porté par un distributeur / JV / Consultant (délégation du risque) ?`,
+  comportement: `**Quels comportements rêvés pourriez vous espérer de ces tiers ?**
+- Décision plus rapide ?
+- Interprétation favorable ?
+- Souplesse sur une règle ?
+- Priorisation de votre dossier ?`,
+  moyen: `**Quels avantages indus pourraient être proposés pour obtenir ces comportements ?** (Pas “ce que vous feriez”, mais ce qui pourrait exister)
+- Avantages financiers : commission, rétrocommission, surfacturation, prestation (fictive ou non)
+  - Disposez-vous d’une marge de manoeuvre ? Possibilité de paiement en espèce ?
+- Avantages en nature : cadeaux, invitations, hospitalité
+  - Disposez-vous d’un tel budget ?
+- Avantages indirects : dons, sponsoring, emploi, stage, recommandation
+  - Fréquence ? Bénéficiaires ? critères ?
+- Avantages différés : promesse future, relation entretenue`,
+  controle: `**Quelles règles ou procédures sont censées empêcher ce scénario ?**
+- Procédure formelle ou pratique informelle ? Critères objectifs ?
+- Comment cela se passe concrètement ?
+- Qui contrôle ? à quel moment ? systématique ?
+- Est-ce réellement appliqué ? Est-ce réellement efficace ?
+- Comment identifiez-vous les tiers avec lesquels vous collaborez ? Critères ?
+- Comment déterminez-vous le montant de sa rémunération ?
+- Comment documentez-vous la réalité de la prestation fournie ?`,
+  limite: `**Comment un acteur malintentionné pourrait-il contourner ces contrôles ?**
+- Via un tiers ?
+- Détournement des procédures ? Fractionnement des prestations ?
+- Prestations fictives ?
+- Possibilité de réaliser des opérations non tracées ? (en cash)
+- Possibilité de réaliser des paiements dans d’autres pays que celui d’implémentation ?`,
+  proba: `**Ce scénario vous paraît il crédible dans votre environnement ?**
+- Déjà vu dans le secteur ?
+- Avez-vous déjà eu connaissance de sollicitations de quelconque nature ?
+- Quel est le niveau de pression à l’atteinte de l’objectif ? Pourrait-il amener à des pratiques non-respectueuses des process ?
+- Quel lien entre rémunération et atteinte de l’objectif (bonus, success fee, commission …) ?`,
 };
 questionConfigByTemplate['lfb-client'] = {
-  tier: `**« Avec quels tiers êtes-vous en contact ? (directement ou indirectement) »**
-Est-ce que certains tiers ont une influence considérable pour le LFB ?
-Avez-vous recours à des intermédiaires (agents, consultants, apporteurs d’affaires) ?`,
-  objective: `**« Quels sont leurs attentes vis-à-vis de vous ? »**
-Quels comportements rêvés ?`,
-  comportement: `**« Quels comportements rêvés ? »**
-Être sélectionné ou reconduit sans mise en concurrence
-Obtenir une **souplesse contractuelle**
-Être **payé plus ou plus vite**
-Voir certaines **non-conformités ignorées**
-Être recommandé en interne
-Tirer un avantage personnel de leur influence sur vous`,
-  moyen: `**« Quels types d’avantages indus (direct ou indirect) certains pourraient-ils être tentés d’offrir pour obtenir ces comportements ? »**
-Cadeaux / invitations : Recevez-vous des cadeaux, invitations ou proposition d’avantage de la part de ce tiers ?
-Avantages indirects : Un interlocuteur vous a-t-il déjà demandé de prendre une personne en stage ou d’offrir un emploi ?
-Financiers : Avez-vous déjà entendu parler de rétro-commission ?`,
-  controle: `**« Quelles règles ou procédures sont censées empêcher ce scénario ? »**
-Procédure formelle ou pratique informelle ? Critères objectifs ?
-Comment cela se passe concrètement ?
-Qui contrôle ? à quel moment ? systématique ?
-Est-ce réellement appliqué ? Est-ce réellement efficace ?
-Comment identifiez-vous les tiers avec lesquels vous collaborez ? Critères ? Décisions collectives ?
-Comment déterminez-vous le montant de sa rémunération ?
-Comment documentez-vous la réalité de la prestation fournie ?`,
-  contournement: `**« À votre avis, comment un acteur malintentionné pourrait-il contourner les contrôles existants ? »**`,
-  proba: `**« In fine, quelle est selon vous la probabilité qu’un risque de corruption survienne dans votre périmètre d’activité ? »**
-Déjà vu dans le secteur ?
-Avez-vous déjà eu connaissance de sollicitations de quelconque nature ?
-Avez-vous déjà été victime ou témoin d’une tentative de fraude ?`,
+  tier: `**Avec quels tiers êtes-vous en contact ? (directement ou indirectement)**
+- Est-ce que certains tiers ont une influence considérable pour le LFB ?
+- Avez-vous recours à des intermédiaires (agents, consultants, apporteurs d’affaires) ?`,
+  objective: `**Quels sont leurs attentes vis-à-vis de vous ?**`,
+  comportement: `**Quels comportements rêvés ?**
+Exemples: 
+- Être sélectionné ou reconduit sans mise en concurrence
+- Obtenir une souplesse contractuelle
+- Être payé plus ou plus vite
+- Voir certaines non-conformités ignorées
+- Être recommandé en interne
+- Tirer un avantage personnel de leur influence sur vous`,
+  moyen: `**Quels types d’avantages indus (direct ou indirect) certains pourraient-ils être tentés d’offrir pour obtenir ces comportements ?**
+- Cadeaux / invitations : Recevez-vous des cadeaux, invitations ou proposition d’avantage de la part de ce tiers ?
+- Avantages indirects : Un interlocuteur vous a-t-il déjà demandé de prendre une personne en stage ou d’offrir un emploi ?
+- Financiers : Avez-vous déjà entendu parler de rétro-commission ?`,
+  controle: `**Quelles règles ou procédures sont censées empêcher ce scénario ?**
+- Procédure formelle ou pratique informelle ? Critères objectifs ?
+- Comment cela se passe concrètement ?
+- Qui contrôle ? à quel moment ? systématique ?
+- Est-ce réellement appliqué ? Est-ce réellement efficace ?
+- Comment identifiez-vous les tiers avec lesquels vous collaborez ? Critères ? Décisions collectives ?
+- Comment déterminez-vous le montant de sa rémunération ?
+- Comment documentez-vous la réalité de la prestation fournie ?`,
+  contournement: `**À votre avis, comment un acteur malintentionné pourrait-il contourner les contrôles existants ?**`,
+  proba: `**In fine, quelle est selon vous la probabilité qu’un risque de corruption survienne dans votre périmètre d’activité ?**
+- Déjà vu dans le secteur ?
+- Avez-vous déjà eu connaissance de sollicitations de quelconque nature ?
+- Avez-vous déjà été victime ou témoin d’une tentative de fraude ?`,
 };
 let activeQuestionCategoryKey = null;
 let activeQuestionNodeId = null;
