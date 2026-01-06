@@ -105,7 +105,8 @@ body {
 }
 
 .question-panel {
-  width: 100%;
+  width: 320px;
+  max-width: calc(100% - 32px);
   background: #f8fafc;
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -114,6 +115,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  position: fixed;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+  z-index: 30;
 }
 
 .question-panel[hidden] {
@@ -848,5 +856,13 @@ body {
     position: static;
     max-width: none;
     margin: 16px;
+  }
+
+  .question-panel {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    transform: none;
+    max-height: none;
   }
 }
