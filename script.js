@@ -1725,15 +1725,31 @@ function renderMentionBackoffice() {
 }
 
 function buildSyntheseEntries() {
-  function findAncestorWithColumn(startNode, targetColumn) {
-    let currentId = startNode?.parentId;
-    while (currentId) {
+  function findAncestorsWithColumn(startNode, targetColumn) {
+    const results = [];
+    const visited = new Set();
+    const queue = [];
+    if (startNode?.parentId) queue.push(startNode.parentId);
+    (startNode?.extraParentIds ?? []).forEach((id) => {
+      if (id) queue.push(id);
+    });
+
+    while (queue.length) {
+      const currentId = queue.shift();
+      if (!currentId || visited.has(currentId)) continue;
+      visited.add(currentId);
       const ancestor = nodes.find((n) => n.id === currentId);
-      if (!ancestor) break;
-      if (ancestor.column === targetColumn) return ancestor;
-      currentId = ancestor.parentId;
+      if (!ancestor) continue;
+      if (ancestor.column === targetColumn) {
+        results.push(ancestor);
+      }
+      const parentIds = [ancestor.parentId, ...(ancestor.extraParentIds ?? [])].filter(Boolean);
+      parentIds.forEach((parentId) => {
+        if (!visited.has(parentId)) queue.push(parentId);
+      });
     }
-    return null;
+
+    return results;
   }
 
   const syntheseConfig = mapTemplates[activeTemplateKey]?.synthese;
@@ -1748,31 +1764,38 @@ function buildSyntheseEntries() {
     return [];
   }
 
-  return nodes
+  const entries = [];
+  const seen = new Set();
+
+  nodes
     .filter((n) => n.column === moyenColumn)
-    .map((moyen) => {
+    .forEach((moyen) => {
       const moyenLabel = (moyen.tag || moyen.text || '').trim();
-      if (!moyenLabel) return null;
-      const comportement = findAncestorWithColumn(moyen, comportementColumn);
-      const tier = comportement ? findAncestorWithColumn(comportement, tierColumn) : null;
-      if (!comportement || !tier) return null;
+      if (!moyenLabel) return;
+      const comportements = findAncestorsWithColumn(moyen, comportementColumn);
+      comportements.forEach((comportement) => {
+        const tiers = findAncestorsWithColumn(comportement, tierColumn);
+        tiers.forEach((tier) => {
+          const moyenCategory = moyenLabel || 'Moyen non catégorisé';
+          const tierCategory = (tier.tierCategory || tier.text || '').trim() || 'Tiers non catégorisé';
+          const comportementText = (comportement.text || '').trim() || 'Comportement non renseigné';
+          const entryKey = `${moyen.id}|${comportement.id}|${tier.id}`;
+          if (seen.has(entryKey)) return;
+          seen.add(entryKey);
+          entries.push({
+            id: moyen.id,
+            phrase: `${moyenCategory} ${tierConnector} ${tierCategory} afin de ${comportementText}`,
+            meta: {
+              moyenCategory,
+              tierCategory,
+              comportementText,
+            },
+          });
+        });
+      });
+    });
 
-      const moyenCategory = moyenLabel || 'Moyen non catégorisé';
-      const tierCategory = (tier.tierCategory || tier.text || '').trim() || 'Tiers non catégorisé';
-      const comportementText = (comportement.text || '').trim() || 'Comportement non renseigné';
-
-      return {
-        id: moyen.id,
-        phrase: `${moyenCategory} ${tierConnector} ${tierCategory} afin de ${comportementText}`,
-        meta: {
-          moyenCategory,
-          tierCategory,
-          comportementText,
-        },
-      };
-    })
-    .filter(Boolean)
-    .sort((a, b) => a.meta.moyenCategory.localeCompare(b.meta.moyenCategory, 'fr', { sensitivity: 'base' }));
+  return entries.sort((a, b) => a.meta.moyenCategory.localeCompare(b.meta.moyenCategory, 'fr', { sensitivity: 'base' }));
 }
 
 function showCopyFeedback(button, label = 'Copié !') {
