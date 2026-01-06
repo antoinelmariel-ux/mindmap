@@ -155,10 +155,14 @@ questionConfigByTemplate['lfb-controleur'] = {
 - Quelle est la preuve du contrôle ?
 - Existe-t-il une procédure ou un formalisme associé ?
 - Existe-t-il des spécificités pays / zones à risque ?`,
-  pertinence: `**Ce contrôle est-il bien adapté aux risques identifiés ?**
+  pertinence: `**Ce contrôle est-il bien adapté pour prévenir les risques de corruption ?**
 - Couvre-t-il les scénarios de risque prioritaires ?
-- Est-il pertinent pour les opérations les plus exposées ?
-- Faut-il ajuster son périmètre ou sa fréquence ?`,
+- Existe-t-il des zones non couvertes par ce contrôle ?
+- Est-il bien positionné :
+  - au bon moment ?
+  - au bon niveau ?
+  - Est-il adapté aux pratiques de l'entreprise ?
+  - Quelles difficultés dans la mise en oeuvre ?`,
   efficacite: `**Comment évaluez-vous l’efficacité de ce mécanisme ?**
 - Ce contrôle permet-il réellement de :
   - empêcher un comportement non conforme ?
@@ -166,11 +170,10 @@ questionConfigByTemplate['lfb-controleur'] = {
 - Est-il plutôt efficace :
   - sur des risques simples ?
   - ou aussi sur des schémas complexes (tiers, surfacturation, rétro-commissions) ?
-- Avez-vous déjà constaté des incidents malgré ce contrôle ?
-- Le contrôle a-t-il déjà permis de :
-  - bloquer une opération ?
-  - refuser un paiement / un tiers ?
-- Comment qualifieriez-vous son efficacité : faible / moyenne / élevée ?`,
+- Avez-vous déjà constaté des incidents malgré ce contrôle ? des contournements ?
+- Le contrôle est-il appliqué de façon homogène ? ou dépendant fortement des personnes ?
+- Comment qualifieriez-vous son efficacité : faible / moyenne / élevée ?
+- Disposez-vous d’éléments factuels pour étayer cette appréciation ?
 };
 let activeQuestionCategoryKey = null;
 let activeQuestionNodeId = null;
