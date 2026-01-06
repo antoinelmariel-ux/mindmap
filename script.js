@@ -233,6 +233,7 @@ const newTierCategoryInput = document.getElementById('new-tier-category');
 const mentionListEl = document.getElementById('mention-list');
 const syntheseListEl = document.getElementById('synthese-list');
 const copyAllSyntheseBtn = document.getElementById('copy-all-synthese');
+const exportChainsCsvBtn = document.getElementById('export-chains-csv');
 const tabButtons = document.querySelectorAll('.tab-button');
 const tabPanels = document.querySelectorAll('.tab-panel');
 const expandedNodes = new Set();
@@ -1243,6 +1244,15 @@ copyAllSyntheseBtn?.addEventListener('click', () => {
   copyToClipboard(fullText, copyAllSyntheseBtn);
 });
 
+exportChainsCsvBtn?.addEventListener('click', () => {
+  const csvContent = buildChainsCsv();
+  if (!csvContent) return;
+  const dateStamp = new Date().toISOString().slice(0, 10);
+  const filename = `chaines-${activeTemplateKey}-${dateStamp}.csv`;
+  downloadCsvFile(filename, csvContent);
+  showCopyFeedback(exportChainsCsvBtn, 'Exporté !');
+});
+
 tabButtons.forEach((btn) => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tabTarget));
 });
@@ -1724,33 +1734,34 @@ function renderMentionBackoffice() {
   });
 }
 
-function buildSyntheseEntries() {
-  function findAncestorsWithColumn(startNode, targetColumn) {
-    const results = [];
-    const visited = new Set();
-    const queue = [];
-    if (startNode?.parentId) queue.push(startNode.parentId);
-    (startNode?.extraParentIds ?? []).forEach((id) => {
-      if (id) queue.push(id);
-    });
+function findAncestorsWithColumn(startNode, targetColumn) {
+  const results = [];
+  const visited = new Set();
+  const queue = [];
+  if (startNode?.parentId) queue.push(startNode.parentId);
+  (startNode?.extraParentIds ?? []).forEach((id) => {
+    if (id) queue.push(id);
+  });
 
-    while (queue.length) {
-      const currentId = queue.shift();
-      if (!currentId || visited.has(currentId)) continue;
-      visited.add(currentId);
-      const ancestor = nodes.find((n) => n.id === currentId);
-      if (!ancestor) continue;
-      if (ancestor.column === targetColumn) {
-        results.push(ancestor);
-      }
-      const parentIds = [ancestor.parentId, ...(ancestor.extraParentIds ?? [])].filter(Boolean);
-      parentIds.forEach((parentId) => {
-        if (!visited.has(parentId)) queue.push(parentId);
-      });
+  while (queue.length) {
+    const currentId = queue.shift();
+    if (!currentId || visited.has(currentId)) continue;
+    visited.add(currentId);
+    const ancestor = nodes.find((n) => n.id === currentId);
+    if (!ancestor) continue;
+    if (ancestor.column === targetColumn) {
+      results.push(ancestor);
     }
-
-    return results;
+    const parentIds = [ancestor.parentId, ...(ancestor.extraParentIds ?? [])].filter(Boolean);
+    parentIds.forEach((parentId) => {
+      if (!visited.has(parentId)) queue.push(parentId);
+    });
   }
+
+  return results;
+}
+
+function buildSyntheseEntries() {
 
   const syntheseConfig = mapTemplates[activeTemplateKey]?.synthese;
   if (!syntheseConfig) {
@@ -1798,6 +1809,95 @@ function buildSyntheseEntries() {
   return entries.sort((a, b) => a.meta.moyenCategory.localeCompare(b.meta.moyenCategory, 'fr', { sensitivity: 'base' }));
 }
 
+function buildChainRows() {
+  const totalColumns = columns.length;
+  if (!totalColumns) return [];
+  const lastColumnIndex = totalColumns - 1;
+  const lastColumnNodes = nodes.filter((node) => node.column === lastColumnIndex);
+  if (!lastColumnNodes.length) return [];
+
+  const rows = [];
+  const seen = new Set();
+
+  function buildChainsFromNode(node, columnIndex) {
+    if (columnIndex === 0) {
+      return [[node]];
+    }
+    const previousColumnIndex = columnIndex - 1;
+    const ancestors = findAncestorsWithColumn(node, previousColumnIndex);
+    if (!ancestors.length) return [];
+    const chains = [];
+    ancestors.forEach((ancestor) => {
+      const parentChains = buildChainsFromNode(ancestor, previousColumnIndex);
+      parentChains.forEach((chain) => {
+        chains.push([...chain, node]);
+      });
+    });
+    return chains;
+  }
+
+  lastColumnNodes.forEach((leafNode) => {
+    const chains = buildChainsFromNode(leafNode, lastColumnIndex);
+    chains.forEach((chain) => {
+      const key = chain.map((node) => node.id).join('|');
+      if (seen.has(key)) return;
+      seen.add(key);
+      rows.push(chain);
+    });
+  });
+
+  return rows;
+}
+
+function getChainExportValue(node, columnKey) {
+  if (!node) return '';
+  if (columnKey === 'tier') return (node.tierCategory || node.text || '').trim();
+  if (columnKey === 'moyen') return (node.tag || node.text || '').trim();
+  return (node.text || '').trim();
+}
+
+function formatCsvValue(value) {
+  const normalized = (value ?? '').toString().replace(/\r?\n/g, ' ').trim();
+  if (normalized === '') return '';
+  const escaped = normalized.replace(/"/g, '""');
+  if (/[;"\n,]/.test(escaped)) {
+    return `"${escaped}"`;
+  }
+  return escaped;
+}
+
+function buildChainsCsv() {
+  const rows = buildChainRows();
+  if (!rows.length) return '';
+  const delimiter = ';';
+  const header = columns.map((column) => column.label);
+  const csvLines = [
+    header.map((value) => formatCsvValue(value)).join(delimiter),
+    ...rows.map((chain) =>
+      chain
+        .map((node, index) => formatCsvValue(getChainExportValue(node, columns[index]?.key)))
+        .join(delimiter)
+    ),
+  ];
+  return csvLines.join('\n');
+}
+
+function downloadCsvFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+function updateChainsCsvExportState() {
+  if (!exportChainsCsvBtn) return;
+  exportChainsCsvBtn.disabled = buildChainRows().length === 0;
+}
+
 function showCopyFeedback(button, label = 'Copié !') {
   if (!button) return;
   const original = button.textContent;
@@ -1836,6 +1936,7 @@ function renderSynthese() {
     if (copyAllSyntheseBtn) {
       copyAllSyntheseBtn.disabled = true;
     }
+    updateChainsCsvExportState();
     return;
   }
   const entries = buildSyntheseEntries();
@@ -1844,6 +1945,7 @@ function renderSynthese() {
   if (copyAllSyntheseBtn) {
     copyAllSyntheseBtn.disabled = entries.length === 0;
   }
+  updateChainsCsvExportState();
 
   if (!entries.length) {
     const empty = document.createElement('div');
