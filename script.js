@@ -402,6 +402,28 @@ function undo() {
 let positions = new Map();
 let groupBounds = new Map();
 
+function adjustParentPositionsToChildren(visibleNodes) {
+  const childPositionsByParent = new Map();
+  visibleNodes.forEach((node) => {
+    if (!node.parentId) return;
+    const childPos = positions.get(node.id);
+    if (!childPos) return;
+    if (!childPositionsByParent.has(node.parentId)) {
+      childPositionsByParent.set(node.parentId, []);
+    }
+    childPositionsByParent.get(node.parentId).push(childPos.y);
+  });
+
+  childPositionsByParent.forEach((childYs, parentId) => {
+    const parentPos = positions.get(parentId);
+    if (!parentPos) return;
+    const minY = Math.min(...childYs);
+    const maxY = Math.max(...childYs);
+    const centerY = (minY + maxY) / 2;
+    positions.set(parentId, { ...parentPos, y: centerY });
+  });
+}
+
 function ensureArrowDefs() {
   let defs = connectionsSvg.querySelector('defs');
   if (!defs) {
@@ -595,6 +617,8 @@ function computeLayout() {
 
     currentY += groupHeight + groupGap;
   });
+
+  adjustParentPositionsToChildren(visibleNodes);
 }
 
 function appendCategorySelect(container, node, options, key) {
