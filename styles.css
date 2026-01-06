@@ -402,6 +402,20 @@ body {
   margin-top: 8px;
 }
 
+.objective-flag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #111827;
+  cursor: pointer;
+}
+
+.objective-flag input {
+  margin: 0;
+}
+
 .tag-label {
   font-size: 12px;
   font-weight: 700;
