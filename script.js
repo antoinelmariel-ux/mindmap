@@ -257,17 +257,19 @@ function snapshotState() {
 function buildInitialNodes(templateKey) {
   const templateColumns = mapTemplates[templateKey].columns;
   const firstColumn = templateColumns[0];
-  return [
-    {
-      id: 'n1',
-      column: 0,
-      text: `${firstColumn.label} principal`,
-      parentId: null,
-      extraParentIds: [],
-      color: firstColumn.color,
-      sortOrder: 0,
-    },
-  ];
+  const initialNode = {
+    id: 'n1',
+    column: 0,
+    text: `${firstColumn.label} principal`,
+    parentId: null,
+    extraParentIds: [],
+    color: firstColumn.color,
+    sortOrder: 0,
+  };
+  if (firstColumn.key === 'objective') {
+    initialNode.objectiveRelaunch = false;
+  }
+  return [initialNode];
 }
 
 function storeActiveTemplateState() {
@@ -673,6 +675,26 @@ function appendCategorySelect(container, node, options, key) {
   container.appendChild(tagRow);
 }
 
+function appendObjectiveRelaunchToggle(container, node) {
+  const flagRow = document.createElement('label');
+  flagRow.className = 'objective-flag';
+  flagRow.addEventListener('click', (event) => event.stopPropagation());
+  flagRow.addEventListener('mousedown', (event) => event.stopPropagation());
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.checked = Boolean(node.objectiveRelaunch);
+  checkbox.addEventListener('change', () => {
+    node.objectiveRelaunch = checkbox.checked;
+    recordHistory();
+  });
+  checkbox.addEventListener('click', (event) => event.stopPropagation());
+  checkbox.addEventListener('mousedown', (event) => event.stopPropagation());
+  const text = document.createElement('span');
+  text.textContent = 'Spécifique relance activité';
+  flagRow.append(checkbox, text);
+  container.appendChild(flagRow);
+}
+
 function handleBadgeClick(node, titleEl) {
   const columnKey = columns[node.column]?.key;
   if (!columnKey) return;
@@ -817,6 +839,10 @@ function renderNodes() {
 
     if (columns[node.column]?.key === 'tier') {
       appendCategorySelect(el, node, tierCategoryOptions, 'tierCategory');
+    }
+
+    if (columns[node.column]?.key === 'objective') {
+      appendObjectiveRelaunchToggle(el, node);
     }
 
     if (columns[node.column]?.key === 'moyen') {
@@ -1125,6 +1151,9 @@ function createNode({ column, parentId, afterId }) {
   const text = '';
   const sortOrder = computeInsertionOrder(column, parentId ?? null, afterId);
   const node = { id: newId, column, parentId: parentId ?? null, extraParentIds: [], text, color: columnMeta.color, sortOrder };
+  if (columnMeta.key === 'objective') {
+    node.objectiveRelaunch = false;
+  }
   nodes.push(node);
   selectedId = newId;
   render();
