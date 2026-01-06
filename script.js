@@ -1751,11 +1751,13 @@ function buildSyntheseEntries() {
   return nodes
     .filter((n) => n.column === moyenColumn)
     .map((moyen) => {
+      const moyenLabel = (moyen.tag || moyen.text || '').trim();
+      if (!moyenLabel) return null;
       const comportement = findAncestorWithColumn(moyen, comportementColumn);
       const tier = comportement ? findAncestorWithColumn(comportement, tierColumn) : null;
       if (!comportement || !tier) return null;
 
-      const moyenCategory = (moyen.tag || moyen.text || '').trim() || 'Moyen non catégorisé';
+      const moyenCategory = moyenLabel || 'Moyen non catégorisé';
       const tierCategory = (tier.tierCategory || tier.text || '').trim() || 'Tiers non catégorisé';
       const comportementText = (comportement.text || '').trim() || 'Comportement non renseigné';
 
