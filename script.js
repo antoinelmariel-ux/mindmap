@@ -598,6 +598,7 @@ function computeLayout() {
   const visibleNodes = getVisibleNodes();
   if (!visibleNodes.length) return;
 
+  const nodeById = new Map(visibleNodes.map((node) => [node.id, node]));
   const byColumn = columns.map(() => []);
   const groupMap = new Map();
   const rootOrder = [];
@@ -630,9 +631,29 @@ function computeLayout() {
   });
 
   groupMap.forEach((columnsByGroup) => {
-    columnsByGroup.forEach((colNodes) =>
-      colNodes.sort((a, b) => sortValue(a, 0) - sortValue(b, 0) || a.id.localeCompare(b.id))
-    );
+    const orderByColumn = columns.map(() => new Map());
+    columnsByGroup.forEach((colNodes, columnIndex) => {
+      const getParentOrder = (node) => {
+        if (!node.parentId) return -1;
+        const parent = nodeById.get(node.parentId);
+        if (!parent) return -1;
+        const parentOrder = orderByColumn[parent.column]?.get(parent.id);
+        return parentOrder ?? -1;
+      };
+
+      colNodes.sort((a, b) => {
+        if (columnIndex === 0) {
+          return sortValue(a, 0) - sortValue(b, 0) || a.id.localeCompare(b.id);
+        }
+        const parentOrderDiff = getParentOrder(a) - getParentOrder(b);
+        if (parentOrderDiff !== 0) return parentOrderDiff;
+        return sortValue(a, 0) - sortValue(b, 0) || a.id.localeCompare(b.id);
+      });
+
+      colNodes.forEach((node, index) => {
+        orderByColumn[columnIndex].set(node.id, index);
+      });
+    });
   });
 
   let currentY = 140;
