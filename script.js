@@ -424,6 +424,47 @@ function adjustParentPositionsToChildren(visibleNodes) {
   });
 }
 
+function avoidChildAlignmentWithForeignParents(visibleNodes) {
+  const parentsByColumn = new Map();
+  visibleNodes.forEach((node) => {
+    if (!hasChildren(node.id)) return;
+    if (!parentsByColumn.has(node.column)) {
+      parentsByColumn.set(node.column, []);
+    }
+    parentsByColumn.get(node.column).push(node);
+  });
+
+  const alignmentThreshold = 10;
+  const nudgeDistance = Math.min(40, rowSpacing / 4);
+
+  visibleNodes.forEach((node) => {
+    if (!node.parentId) return;
+    const parent = nodes.find((n) => n.id === node.parentId);
+    if (!parent) return;
+    const foreignParents = (parentsByColumn.get(parent.column) || []).filter((p) => p.id !== node.parentId);
+    if (!foreignParents.length) return;
+    const childPos = positions.get(node.id);
+    if (!childPos) return;
+    const bounds = groupBounds.get(getRootId(node));
+    let adjustedY = childPos.y;
+
+    foreignParents.forEach((foreignParent) => {
+      const foreignPos = positions.get(foreignParent.id);
+      if (!foreignPos) return;
+      if (Math.abs(adjustedY - foreignPos.y) <= alignmentThreshold) {
+        adjustedY += adjustedY <= foreignPos.y ? nudgeDistance : -nudgeDistance;
+        if (bounds) {
+          adjustedY = Math.min(bounds.bottom, Math.max(bounds.top, adjustedY));
+        }
+      }
+    });
+
+    if (adjustedY !== childPos.y) {
+      positions.set(node.id, { ...childPos, y: adjustedY });
+    }
+  });
+}
+
 function ensureArrowDefs() {
   let defs = connectionsSvg.querySelector('defs');
   if (!defs) {
@@ -619,6 +660,7 @@ function computeLayout() {
   });
 
   adjustParentPositionsToChildren(visibleNodes);
+  avoidChildAlignmentWithForeignParents(visibleNodes);
 }
 
 function appendCategorySelect(container, node, options, key) {
