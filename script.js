@@ -65,32 +65,32 @@ questionConfigByTemplate['lfb-fournisseur'] = {
   - A quelle fréquence ?
 - Objectifs relationnels (maintenir une relation clé)
 - Objectifs temps (accélérer, sécuriser, débloquer)
-- Objectifs indirectement influencés par un tiers ? Du fait de validation, autorisation, influence, … (Administration / Politique / Influenceurs / Prestataires / …)
-- Pensez-vous à d’autres activités où vous êtes en contact avec des tiers ? (directement ou indirectement)
-- Quelles activités sont les plus risquées, ou demanderaient le plus de précautions ?`,
+- Avez vous des objectifs portés par des tiers (distributeurs, prestataires, intermédiaires, ...) ?
+- Pensez-vous à d’autres activités où vous êtes en contact avec des tiers ? (directement ou indirectement)`,
   tier: `**Qui sont les tiers qui ont un impact sur ces objectifs ?**
 - Administration / Client / Prestataires / …
 - Agent public ? Privé ?
 - Influenceurs ?
-- Faites-vous appel à des intermédiaires / Prestataires / Apporteurs d’affaires ?
-- Objectif porté par un distributeur / JV / Consultant (délégation du risque) ?`,
+- Faites-vous appel à des intermédiaires / Prestataires / Apporteurs d’affaires ?`,
   comportement: `**Quels comportements rêvés pourriez vous espérer de ces tiers ?**
+- Décision / interprétation favorable ?
 - Décision plus rapide ?
-- Interprétation favorable ?
-- Souplesse sur une règle ?
-- Priorisation de votre dossier ?`,
+- Souplesse sur une règle ?`,
   moyen: `**Quels avantages indus pourraient être proposés pour obtenir ces comportements ?** (Pas “ce que vous feriez”, mais ce qui pourrait exister)
 - Avantages financiers : commission, rétrocommission, surfacturation, prestation (fictive ou non)
   - Disposez-vous d’une marge de manoeuvre ? Possibilité de paiement en espèce ?
+  - Disposez-vous d’un tel budget ?
 - Avantages en nature : cadeaux, invitations, hospitalité
+  - Disposez-vous d’une marge de manoeuvre ? 
   - Disposez-vous d’un tel budget ?
 - Avantages indirects : dons, sponsoring, emploi, stage, recommandation
+  - Disposez-vous d'une marge de manoeuvre ? d'un budget ?
   - Fréquence ? Bénéficiaires ? critères ?
 - Avantages différés : promesse future, relation entretenue`,
   controle: `**Quelles règles ou procédures sont censées empêcher ce scénario ?**
 - Procédure formelle ou pratique informelle ? Critères objectifs ?
 - Comment cela se passe concrètement ?
-- Qui contrôle ? à quel moment ? systématique ?
+- Qui contrôle ? à quel moment ? systématique ? tracé ?
 - Est-ce réellement appliqué ? Est-ce réellement efficace ?
 - Comment identifiez-vous les tiers avec lesquels vous collaborez ? Critères ?
 - Comment déterminez-vous le montant de sa rémunération ?
@@ -103,6 +103,7 @@ questionConfigByTemplate['lfb-fournisseur'] = {
 - Possibilité de réaliser des paiements dans d’autres pays que celui d’implémentation ?`,
   proba: `**Ce scénario vous paraît il crédible dans votre environnement ?**
 - Déjà vu dans le secteur ?
+- Parait il crédible dans certains pays spécifique ?
 - Avez-vous déjà eu connaissance de sollicitations de quelconque nature ?
 - Quel est le niveau de pression à l’atteinte de l’objectif ? Pourrait-il amener à des pratiques non-respectueuses des process ?
 - Quel lien entre rémunération et atteinte de l’objectif (bonus, success fee, commission …) ?`,
@@ -110,7 +111,7 @@ questionConfigByTemplate['lfb-fournisseur'] = {
 questionConfigByTemplate['lfb-client'] = {
   tier: `**Avec quels tiers êtes-vous en contact ? (directement ou indirectement)**
 - Est-ce que certains tiers ont une influence considérable pour le LFB ?
-- Avez-vous recours à des intermédiaires (agents, consultants, apporteurs d’affaires) ?`,
+- Est-ce que certains tiers sont très dépendant du LFB ? et inversement ?`,
   objective: `**Quels sont leurs attentes vis-à-vis de vous ?**`,
   comportement: `**Quels comportements rêvés ?**
 Exemples: 
@@ -127,7 +128,7 @@ Exemples:
   controle: `**Quelles règles ou procédures sont censées empêcher ce scénario ?**
 - Procédure formelle ou pratique informelle ? Critères objectifs ?
 - Comment cela se passe concrètement ?
-- Qui contrôle ? à quel moment ? systématique ?
+- Qui contrôle ? à quel moment ? systématique ? tracé ?
 - Est-ce réellement appliqué ? Est-ce réellement efficace ?
 - Comment identifiez-vous les tiers avec lesquels vous collaborez ? Critères ? Décisions collectives ?
 - Comment déterminez-vous le montant de sa rémunération ?
@@ -135,6 +136,7 @@ Exemples:
   contournement: `**À votre avis, comment un acteur malintentionné pourrait-il contourner les contrôles existants ?**`,
   proba: `**In fine, quelle est selon vous la probabilité qu’un risque de corruption survienne dans votre périmètre d’activité ?**
 - Déjà vu dans le secteur ?
+- Parait il crédible dans certains pays spécifique ?
 - Avez-vous déjà eu connaissance de sollicitations de quelconque nature ?
 - Avez-vous déjà été victime ou témoin d’une tentative de fraude ?`,
 };
@@ -145,17 +147,14 @@ questionConfigByTemplate['lfb-controleur'] = {
 - Y-a-t-il des séparations de tâches prévues pour éviter les prises de décisions isolées ?`,
   description: `**Pouvez-vous me décrire ce contrôle et la façon dont il est mis en œuvre ?**
 - Qui est responsable du contrôle ?
-- Quel est le périmètre exact de ce contrôle ?
-- Ce contrôle est-il :
-  - préventif (a priori) ou détectif (a posteriori) ?
+- À quel moment intervient-il dans le processus ?
+- Quelle est la donnée ou l’opération contrôlée ?
+- Le contrôle est-il :
   - manuel ou automatisé ?
-  - systématique ou sur échantillonnage ?
-- Quelle est la fréquence du contrôle ?
-- Quelle est la preuve laissée par le contrôle (trace, validation, log, signature) ?
-- Existe-t-il une documentation formelle (procédure, mode opératoire) ?
-- S’agit-il d’un contrôle :
-  - centralisé ou local ?
-  - Existe-t-il des contrôles spécifiques pays / zones à risque ?`,
+  - systématique ou par échantillon ?
+- Quelle est la preuve du contrôle ?
+- Existe-t-il une procédure ou un formalisme associé ?
+- Existe-t-il des spécificités pays / zones à risque ?`,
   pertinence: `**Ce contrôle est-il bien adapté aux risques identifiés ?**
 - Couvre-t-il les scénarios de risque prioritaires ?
 - Est-il pertinent pour les opérations les plus exposées ?
