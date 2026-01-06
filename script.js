@@ -868,10 +868,41 @@ function renderNodes() {
   renderObjectiveAddButton();
 }
 
+function resolveChildAlignmentWithForeignParents({ node, candidateY, minY, maxY, alignmentThreshold, nudgeDistance, parentsByColumn }) {
+  if (!node.parentId) return candidateY;
+  const parent = nodes.find((n) => n.id === node.parentId);
+  if (!parent) return candidateY;
+  const foreignParents = (parentsByColumn.get(parent.column) || []).filter((p) => p.id !== parent.id);
+  if (!foreignParents.length) return candidateY;
+
+  let adjustedY = candidateY;
+  let attempts = 0;
+  while (attempts < 6) {
+    const conflictingParent = foreignParents.find((foreignParent) => {
+      const foreignPos = positions.get(foreignParent.id);
+      return foreignPos && Math.abs(adjustedY - foreignPos.y) <= alignmentThreshold;
+    });
+    if (!conflictingParent) break;
+    const foreignY = positions.get(conflictingParent.id)?.y ?? adjustedY;
+    const moveUp = adjustedY <= foreignY;
+    let nextY = adjustedY + (moveUp ? -nudgeDistance : nudgeDistance);
+    if (nextY < minY || nextY > maxY) {
+      nextY = adjustedY + (moveUp ? nudgeDistance : -nudgeDistance);
+    }
+    nextY = Math.min(maxY, Math.max(minY, nextY));
+    if (nextY === adjustedY) break;
+    adjustedY = nextY;
+    attempts += 1;
+  }
+
+  return adjustedY;
+}
+
 function preventNodeOverlap() {
   const visibleNodes = getVisibleNodes();
   const nodesByGroupAndColumn = new Map();
   const rootOrder = [];
+  const parentsByColumn = new Map();
 
   visibleNodes.forEach((node) => {
     const el = nodesContainer.querySelector(`.node[data-id="${node.id}"]`);
@@ -882,9 +913,17 @@ function preventNodeOverlap() {
       rootOrder.push(rootId);
     }
     nodesByGroupAndColumn.get(rootId)[node.column].push({ node, el });
+    if (hasChildren(node.id)) {
+      if (!parentsByColumn.has(node.column)) {
+        parentsByColumn.set(node.column, []);
+      }
+      parentsByColumn.get(node.column).push(node);
+    }
   });
 
   const gap = 32;
+  const alignmentThreshold = 12;
+  const nudgeDistance = Math.min(40, rowSpacing / 4);
   rootOrder.forEach((rootId) => {
     const columnsByGroup = nodesByGroupAndColumn.get(rootId);
     const bounds = groupBounds.get(rootId);
@@ -900,10 +939,21 @@ function preventNodeOverlap() {
         const pos = positions.get(node.id);
         if (!pos) return;
         const height = el.offsetHeight || el.getBoundingClientRect().height || 0;
-        let adjustedY = Math.max(pos.y, lastBottom + gap);
+        const minY = lastBottom + gap;
+        const maxY = bounds?.bottom ? bounds.bottom - height : Infinity;
+        let adjustedY = Math.max(pos.y, minY);
         if (bounds?.bottom) {
-          adjustedY = Math.min(adjustedY, bounds.bottom - height);
+          adjustedY = Math.min(adjustedY, maxY);
         }
+        adjustedY = resolveChildAlignmentWithForeignParents({
+          node,
+          candidateY: adjustedY,
+          minY,
+          maxY,
+          alignmentThreshold,
+          nudgeDistance,
+          parentsByColumn,
+        });
         if (adjustedY !== pos.y) {
           positions.set(node.id, { ...pos, y: adjustedY });
         }
