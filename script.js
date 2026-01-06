@@ -40,12 +40,8 @@ const mapTemplates = {
     columns: [
       { key: 'controle', label: 'Contrôle', color: 'controle', placeholder: 'Nouveau contrôle' },
       { key: 'description', label: 'Description', color: 'objective', placeholder: 'Nouvelle description' },
-      { key: 'difficultes', label: 'Difficultés', color: 'tier', placeholder: 'Nouvelles difficultés' },
+      { key: 'pertinence', label: 'Pertinence', color: 'tier', placeholder: 'Nouvelle pertinence' },
       { key: 'efficacite', label: 'Efficacité', color: 'comportement', placeholder: 'Nouvelle efficacité' },
-      { key: 'indicateurs', label: 'Indicateurs', color: 'moyen', placeholder: 'Nouveaux indicateurs' },
-      { key: 'non-conformite', label: 'Non-conformité', color: 'limite', placeholder: 'Nouvelle non-conformité' },
-      { key: 'rex', label: 'REX', color: 'proba', placeholder: 'Nouveau REX' },
-      { key: 'faiblesses', label: 'Faiblesses', color: 'objective', placeholder: 'Nouvelles faiblesses' },
     ],
     synthese: null,
   },
@@ -160,17 +156,10 @@ questionConfigByTemplate['lfb-controleur'] = {
 - S’agit-il d’un contrôle :
   - centralisé ou local ?
   - Existe-t-il des contrôles spécifiques pays / zones à risque ?`,
-  difficultes: `**Avez-vous constaté des difficultés dans la mise en œuvre de ces mesures ?**
-- Difficultés liées :
-  - aux ressources (temps, effectifs, compétences) ?
-  - aux outils (SI, données incomplètes, absence d’automatisation) ?
-  - aux processus métiers (pression business, urgences, exceptions) ?
-- Le contrôle est-il parfois :
-  - contourné ?
-  - perçu comme trop lourd ?
-  - appliqué de façon hétérogène selon les équipes / pays ?
-  - Existe-t-il des zones grises ou des cas non couverts par la procédure ?
-  - Avez-vous identifié des freins culturels à l’application du contrôle ?`,
+  pertinence: `**Ce contrôle est-il bien adapté aux risques identifiés ?**
+- Couvre-t-il les scénarios de risque prioritaires ?
+- Est-il pertinent pour les opérations les plus exposées ?
+- Faut-il ajuster son périmètre ou sa fréquence ?`,
   efficacite: `**Comment évaluez-vous l’efficacité de ce mécanisme ?**
 - Ce contrôle permet-il réellement de :
   - empêcher un comportement non conforme ?
@@ -183,31 +172,6 @@ questionConfigByTemplate['lfb-controleur'] = {
   - bloquer une opération ?
   - refuser un paiement / un tiers ?
 - Comment qualifieriez-vous son efficacité : faible / moyenne / élevée ?`,
-  indicateurs: `**Disposez-vous d’indicateurs permettant de suivre l’efficacité et le fonctionnement de ce contrôle ?**`,
-  'non-conformite': `**Quelles sont les non-conformités ou écarts les plus fréquemment constatés ?**
-- Ces non-conformités concernent-elles :
-  - des oublis formels ?
-  - des contournements volontaires ?
-  - une mauvaise compréhension des règles ?
-- Sont-elles :
-  - récurrentes ?
-  - concentrées sur certains métiers / pays ?
-- Quels processus sont les plus exposés ?
-- Existe-t-il des schémas typiques (ex : cadeaux non déclarés, tiers non évalués, factures incomplètes) ?
-- Ces non-conformités sont-elles documentées ? tracées ? suivies dans le temps ?`,
-  rex: `**Quelle a été la réaction de l’entreprise face à ces incidents ?**`,
-  faiblesses: `**Avez-vous identifié d’autres faiblesses dans le dispositif ?**
-- Faiblesses liées :
-  - à l’organisation ?
-  - aux outils ?
-  - aux ressources ?
-  - à la culture ?
-- Existe-t-il des zones non couvertes par les contrôles ?
-- Des risques émergents non intégrés ?
-- Des dépendances excessives à :
-  - un contrôle manuel ?
-  - une personne clé ?
-- Si vous deviez renforcer un seul point du dispositif, lequel serait-il ?`,
 };
 let activeQuestionCategoryKey = null;
 let activeQuestionNodeId = null;
@@ -1586,8 +1550,9 @@ function formatQuestionMarkup(text) {
 }
 
 function buildQuestionList(raw) {
-  const root = document.createElement('ul');
-  const listStack = [root];
+  const container = document.createElement('div');
+  let listStack = [];
+  let rootList = null;
   const lines = raw.split('\n');
 
   lines.forEach((line) => {
@@ -1596,10 +1561,23 @@ function buildQuestionList(raw) {
     let level = 0;
     let content = line.trim();
 
-    if (match) {
-      const indent = match[1].replace(/\t/g, '  ').length;
-      level = Math.floor(indent / 2);
-      content = match[3].trim();
+    if (!match) {
+      listStack = [];
+      rootList = null;
+      const paragraph = document.createElement('p');
+      paragraph.innerHTML = formatQuestionMarkup(content);
+      container.appendChild(paragraph);
+      return;
+    }
+
+    const indent = match[1].replace(/\t/g, '  ').length;
+    level = Math.floor(indent / 2);
+    content = match[3].trim();
+
+    if (!rootList) {
+      rootList = document.createElement('ul');
+      container.appendChild(rootList);
+      listStack = [rootList];
     }
 
     if (level > 0 && !listStack[listStack.length - 1].lastElementChild) {
@@ -1625,7 +1603,7 @@ function buildQuestionList(raw) {
     targetList.appendChild(item);
   });
 
-  return root;
+  return container;
 }
 
 function renderQuestionPanel() {

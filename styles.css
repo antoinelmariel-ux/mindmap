@@ -146,6 +146,10 @@ body {
   gap: 6px;
 }
 
+.question-panel-body p {
+  margin: 0;
+}
+
 .question-panel-body .empty {
   color: var(--muted);
   font-size: 13px;
