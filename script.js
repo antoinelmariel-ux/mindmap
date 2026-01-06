@@ -762,7 +762,11 @@ function renderNodes() {
       setEditingNode(node.id);
       selectedId = node.id;
       updateSelection();
+      requestAnimationFrame(() => centerOnNode(node.id));
       title.textContent = node.text;
+    });
+    title.addEventListener('input', () => {
+      requestAnimationFrame(() => centerOnNode(node.id));
     });
     title.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && (e.altKey || e.shiftKey)) {
