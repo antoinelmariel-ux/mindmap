@@ -244,6 +244,19 @@ const questionPanelTitleEl = document.getElementById('question-panel-title');
 const questionPanelBodyEl = document.getElementById('question-panel-body');
 const questionConfigListEl = document.getElementById('question-config-list');
 const syntheseDescEl = document.getElementById('synthese-desc');
+const shareModal = document.getElementById('share-modal');
+const openShareBtn = document.getElementById('open-share');
+const closeShareBtn = document.getElementById('close-share');
+const shareCommentsCheckbox = document.getElementById('share-comments');
+const shareLinkInput = document.getElementById('share-link');
+const shareCopyBtn = document.getElementById('share-copy');
+const shareFeedback = document.getElementById('share-feedback');
+const postitLauncher = document.getElementById('postit-launcher');
+const postitPanel = document.getElementById('postit-panel');
+const postitCloseBtn = document.getElementById('postit-close');
+const postitForm = document.getElementById('postit-form');
+const postitInput = document.getElementById('postit-input');
+const postitList = document.getElementById('postit-list');
 
 function snapshotState() {
   return {
@@ -2078,3 +2091,119 @@ function ensureFirstObjectiveVisible() {
   updateSelection();
   requestAnimationFrame(() => centerOnNode(firstObjective.id));
 }
+
+function buildShowcaseLink(allowComments) {
+  const url = new URL(window.location.href);
+  url.search = '';
+  url.hash = '';
+  url.searchParams.set('showcase', '1');
+  if (allowComments) {
+    url.searchParams.set('comments', '1');
+  }
+  return url.toString();
+}
+
+function updateShareLink() {
+  if (!shareLinkInput || !shareCommentsCheckbox) return;
+  shareLinkInput.value = buildShowcaseLink(shareCommentsCheckbox.checked);
+}
+
+function showShareFeedback(message) {
+  if (!shareFeedback) return;
+  shareFeedback.textContent = message;
+  shareFeedback.classList.add('visible');
+  setTimeout(() => {
+    shareFeedback.classList.remove('visible');
+  }, 2000);
+}
+
+function openShareModal() {
+  if (!shareModal) return;
+  shareModal.removeAttribute('hidden');
+  updateShareLink();
+  shareLinkInput?.focus();
+  shareLinkInput?.select();
+}
+
+function closeShareModal() {
+  shareModal?.setAttribute('hidden', '');
+}
+
+function copyShareLink() {
+  if (!shareLinkInput) return;
+  const value = shareLinkInput.value;
+  if (!value) return;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(value).then(() => {
+      showShareFeedback('Lien copié !');
+    });
+    return;
+  }
+  shareLinkInput.select();
+  document.execCommand('copy');
+  showShareFeedback('Lien copié !');
+}
+
+function togglePostitPanel(forceOpen = null) {
+  if (!postitPanel || !postitLauncher) return;
+  const isOpen = !postitPanel.hasAttribute('hidden');
+  const shouldOpen = forceOpen ?? !isOpen;
+  if (shouldOpen) {
+    postitPanel.removeAttribute('hidden');
+    postitLauncher.setAttribute('aria-expanded', 'true');
+    postitInput?.focus();
+  } else {
+    postitPanel.setAttribute('hidden', '');
+    postitLauncher.setAttribute('aria-expanded', 'false');
+  }
+}
+
+function addPostitNote(text) {
+  if (!postitList || !text) return;
+  const item = document.createElement('li');
+  item.className = 'postit-item';
+  item.textContent = text;
+  postitList.prepend(item);
+}
+
+function applyShowcaseMode() {
+  const params = new URLSearchParams(window.location.search);
+  const isShowcase = params.get('showcase') === '1';
+  const allowComments = params.get('comments') === '1';
+  document.body.classList.toggle('showcase-mode', isShowcase);
+  document.body.classList.toggle('comments-enabled', isShowcase && allowComments);
+  if (isShowcase) {
+    switchTab('tab-map');
+  }
+  if (postitLauncher) {
+    if (isShowcase && allowComments) {
+      postitLauncher.removeAttribute('hidden');
+    } else {
+      postitLauncher.setAttribute('hidden', '');
+      postitPanel?.setAttribute('hidden', '');
+    }
+  }
+}
+
+openShareBtn?.addEventListener('click', openShareModal);
+closeShareBtn?.addEventListener('click', closeShareModal);
+shareModal?.addEventListener('click', (event) => {
+  if (event.target === shareModal) {
+    closeShareModal();
+  }
+});
+shareCommentsCheckbox?.addEventListener('change', updateShareLink);
+shareCopyBtn?.addEventListener('click', copyShareLink);
+
+postitLauncher?.addEventListener('click', () => togglePostitPanel());
+postitCloseBtn?.addEventListener('click', () => togglePostitPanel(false));
+postitForm?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (!postitInput) return;
+  const value = postitInput.value.trim();
+  if (!value) return;
+  addPostitNote(value);
+  postitInput.value = '';
+});
+
+applyShowcaseMode();
