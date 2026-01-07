@@ -174,6 +174,7 @@ questionConfigByTemplate['lfb-controleur'] = {
 - Le contrôle est-il appliqué de façon homogène ? ou dépendant fortement des personnes ?
 - Comment qualifieriez-vous son efficacité : faible / moyenne / élevée ?
 - Disposez-vous d’éléments factuels pour étayer cette appréciation ?
+`;
 };
 let activeQuestionCategoryKey = null;
 let activeQuestionNodeId = null;
