@@ -2419,6 +2419,11 @@ function getChainExportValue(node, columnKey) {
   return (node.text || '').trim();
 }
 
+function getChainExportTagValue(node) {
+  if (!node) return '';
+  return (node.tag || '').trim();
+}
+
 function formatCsvValue(value) {
   const normalized = (value ?? '').toString().replace(/\r?\n/g, ' ').trim();
   if (normalized === '') return '';
@@ -2433,12 +2438,15 @@ function buildChainsCsv() {
   const rows = buildChainRows();
   if (!rows.length) return '';
   const delimiter = ';';
-  const header = columns.map((column) => column.label);
+  const header = columns.flatMap((column) => [column.label, `${column.label} - Tag`]);
   const csvLines = [
     header.map((value) => formatCsvValue(value)).join(delimiter),
     ...rows.map((chain) =>
       chain
-        .map((node, index) => formatCsvValue(getChainExportValue(node, columns[index]?.key)))
+        .flatMap((node, index) => [
+          formatCsvValue(getChainExportValue(node, columns[index]?.key)),
+          formatCsvValue(getChainExportTagValue(node)),
+        ])
         .join(delimiter)
     ),
   ];
