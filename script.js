@@ -1160,7 +1160,8 @@ function createNode({ column, parentId, afterId }) {
   selectedId = newId;
   render();
   recordHistory();
-  centerOnNode(newId);
+  const verticalOnly = ['objective', 'controle', 'tier'].includes(columnMeta.key);
+  centerOnNode(newId, { verticalOnly });
   requestAnimationFrame(() => {
     const titleEl = nodesContainer.querySelector(`[data-id="${newId}"] .node-text`);
     titleEl?.focus({ preventScroll: true });
@@ -1287,7 +1288,8 @@ zoomRange.addEventListener('input', (e) => {
 zoomOutBtn.addEventListener('click', () => setZoom(zoom - 0.1));
 zoomInBtn.addEventListener('click', () => setZoom(zoom + 0.1));
 
-function centerOnNode(id) {
+function centerOnNode(id, options = {}) {
+  const { verticalOnly = false } = options;
   const element = nodesContainer.querySelector(`[data-id="${id}"]`);
   if (!element) return;
   if (!workspace) {
@@ -1298,7 +1300,7 @@ function centerOnNode(id) {
   const elementRect = element.getBoundingClientRect();
   const deltaX = elementRect.left - workspaceRect.left - (workspaceRect.width / 2 - elementRect.width / 2);
   const deltaY = elementRect.top - workspaceRect.top - (workspaceRect.height / 2 - elementRect.height / 2);
-  workspace.scrollBy({ left: deltaX, top: deltaY, behavior: 'smooth' });
+  workspace.scrollBy({ left: verticalOnly ? 0 : deltaX, top: deltaY, behavior: 'smooth' });
 }
 
 function updateNodeText(id, text) {
