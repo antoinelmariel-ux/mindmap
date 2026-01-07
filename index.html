@@ -8,29 +8,27 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">Impact Mapping</div>
-    <div class="map-controls">
-      <label for="map-selector">Carte</label>
-      <select id="map-selector" aria-label="Choisir une carte">
-        <option value="lfb-fournisseur">LFB Fournisseur</option>
-        <option value="lfb-client">LFB Client</option>
-        <option value="lfb-controleur">LFB contrôleur</option>
-      </select>
+    <div class="brand" data-i18n="brand">Impact Mapping</div>
+    <div class="topbar-actions">
+      <div class="map-controls">
+        <label id="map-selector-label" for="map-selector" data-i18n="mapSelectorLabel">Carte</label>
+        <select id="map-selector" aria-label="Choisir une carte" data-i18n-aria-label="mapSelectorAriaLabel"></select>
+      </div>
+      <button id="language-toggle" class="lang-toggle" type="button" aria-label="Passer en anglais">EN</button>
     </div>
-    <div class="legend">
-    </div>
+    <div class="legend"></div>
   </header>
 
   <main class="app-layout">
     <section id="question-panel" class="question-panel" aria-live="polite" hidden>
-      <div class="question-panel-title" id="question-panel-title">Questions à poser</div>
+      <div class="question-panel-title" id="question-panel-title" data-i18n="questionPanelTitle">Questions à poser</div>
       <div class="question-panel-body" id="question-panel-body"></div>
     </section>
-    <div class="tab-bar" role="tablist" aria-label="Navigation des onglets">
-      <button class="tab-button active" data-tab-target="tab-map" role="tab" aria-selected="true">Carte</button>
-      <button class="tab-button" data-tab-target="tab-synthese" role="tab" aria-selected="false">Synthèse</button>
-      <button class="tab-button" data-tab-target="tab-mentions" role="tab" aria-selected="false">Mentions @</button>
-      <button class="tab-button" data-tab-target="tab-notes" role="tab" aria-selected="false">Configuration</button>
+    <div class="tab-bar" role="tablist" aria-label="Navigation des onglets" data-i18n-aria-label="tabBarAriaLabel">
+      <button class="tab-button active" data-tab-target="tab-map" role="tab" aria-selected="true" data-i18n="tabMap">Carte</button>
+      <button class="tab-button" data-tab-target="tab-synthese" role="tab" aria-selected="false" data-i18n="tabSynthese">Synthèse</button>
+      <button class="tab-button" data-tab-target="tab-mentions" role="tab" aria-selected="false" data-i18n="tabMentions">Mentions @</button>
+      <button class="tab-button" data-tab-target="tab-notes" role="tab" aria-selected="false" data-i18n="tabConfiguration">Configuration</button>
     </div>
     <section class="tab-panel active" id="tab-map" role="tabpanel">
       <div class="workspace" id="workspace">
@@ -42,37 +40,37 @@
     </section>
     <section class="tab-panel" id="tab-notes" role="tabpanel" aria-live="polite">
       <div class="note-helper">
-        <div class="helper-title">Prise de notes en direct</div>
+        <div class="helper-title" data-i18n="helperTitle">Prise de notes en direct</div>
         <div id="current-selection" class="current-selection">Sélection : Objectif</div>
         <div class="helper-actions">
-          <button id="add-sibling" type="button">Ajouter au même niveau (Entrée)</button>
-          <button id="add-child" type="button">Ajouter un enfant (Tab)</button>
-          <button id="delete-branch" type="button" class="danger">Supprimer la branche (Suppr)</button>
+          <button id="add-sibling" type="button" data-i18n="addSibling">Ajouter au même niveau (Entrée)</button>
+          <button id="add-child" type="button" data-i18n="addChild">Ajouter un enfant (Tab)</button>
+          <button id="delete-branch" type="button" class="danger" data-i18n="deleteBranch">Supprimer la branche (Suppr)</button>
         </div>
-        <div class="hint">Astuce : Alt + Entrée ou Maj + Entrée pour insérer un retour à la ligne dans une note.</div>
+        <div class="hint" data-i18n="notesHint">Astuce : Alt + Entrée ou Maj + Entrée pour insérer un retour à la ligne dans une note.</div>
           <div class="tag-admin">
-            <div class="tag-admin-title">Back-office des tags "Moyen"</div>
-            <div class="tag-admin-desc">Mettez à jour la liste déroulante affichée sur les noeuds de la colonne Moyen.</div>
+            <div class="tag-admin-title" data-i18n="tagAdminTitle">Back-office des tags "Moyen"</div>
+            <div class="tag-admin-desc" data-i18n="tagAdminDesc">Mettez à jour la liste déroulante affichée sur les noeuds de la colonne Moyen.</div>
             <div class="tag-admin-form">
-              <input id="new-tag" type="text" placeholder="Nouveau tag" aria-label="Ajouter un tag" />
-              <button id="add-tag" type="button">Ajouter</button>
+              <input id="new-tag" type="text" placeholder="Nouveau tag" aria-label="Ajouter un tag" data-i18n-placeholder="newTagPlaceholder" data-i18n-aria-label="newTagAriaLabel" />
+              <button id="add-tag" type="button" data-i18n="addTagButton">Ajouter</button>
             </div>
             <div id="tag-list" class="tag-list"></div>
           </div>
 
           <div class="tag-admin">
-            <div class="tag-admin-title">Back-office des catégories "Tiers"</div>
-            <div class="tag-admin-desc">Mettez à jour la liste déroulante affichée sur les noeuds de la colonne Tiers.</div>
+            <div class="tag-admin-title" data-i18n="tierAdminTitle">Back-office des catégories "Tiers"</div>
+            <div class="tag-admin-desc" data-i18n="tierAdminDesc">Mettez à jour la liste déroulante affichée sur les noeuds de la colonne Tiers.</div>
             <div class="tag-admin-form">
-              <input id="new-tier-category" type="text" placeholder="Nouvelle catégorie" aria-label="Ajouter une catégorie" />
-              <button id="add-tier-category" type="button">Ajouter</button>
+              <input id="new-tier-category" type="text" placeholder="Nouvelle catégorie" aria-label="Ajouter une catégorie" data-i18n-placeholder="newTierCategoryPlaceholder" data-i18n-aria-label="newTierCategoryAriaLabel" />
+              <button id="add-tier-category" type="button" data-i18n="addTierCategoryButton">Ajouter</button>
             </div>
             <div id="tier-category-list" class="tag-list"></div>
           </div>
 
           <div class="tag-admin">
-            <div class="tag-admin-title">Back-office des questions par badge</div>
-            <div class="tag-admin-desc">Saisissez une question par ligne pour chaque catégorie de badge de la carte active.</div>
+            <div class="tag-admin-title" data-i18n="questionAdminTitle">Back-office des questions par badge</div>
+            <div class="tag-admin-desc" data-i18n="questionAdminDesc">Saisissez une question par ligne pour chaque catégorie de badge de la carte active.</div>
             <div id="question-config-list" class="question-config-list"></div>
           </div>
 
@@ -83,11 +81,11 @@
       <div class="synthese-panel">
         <div class="synthese-header">
           <div>
-            <div class="synthese-title">Synthèse des chaînes</div>
+            <div class="synthese-title" data-i18n="syntheseTitle">Synthèse des chaînes</div>
             <p class="synthese-desc" id="synthese-desc">Générez automatiquement les phrases « Catégorie du moyen de Catégorie du tiers afin de Comportement » pour chaque chaîne.</p>
           </div>
-          <button id="copy-all-synthese" type="button" class="ghost">Copier toutes les synthèses</button>
-          <button id="export-chains-csv" type="button" class="ghost">Exporter CSV</button>
+          <button id="copy-all-synthese" type="button" class="ghost" data-i18n="copyAllSynthese">Copier toutes les synthèses</button>
+          <button id="export-chains-csv" type="button" class="ghost" data-i18n="exportChainsCsv">Exporter CSV</button>
         </div>
         <div id="synthese-list" class="synthese-list" aria-live="polite"></div>
       </div>
@@ -96,24 +94,24 @@
     <section class="tab-panel" id="tab-mentions" role="tabpanel" aria-live="polite">
       <div class="mentions-panel">
         <div class="mention-admin">
-          <div class="mention-admin-title">Back-office des mentions @</div>
-          <div class="mention-admin-desc">Liste des bulles contenant des mentions, regroupées par personne citée.</div>
+          <div class="mention-admin-title" data-i18n="mentionAdminTitle">Back-office des mentions @</div>
+          <div class="mention-admin-desc" data-i18n="mentionAdminDesc">Liste des bulles contenant des mentions, regroupées par personne citée.</div>
           <div id="mention-list" class="mention-list" aria-live="polite"></div>
         </div>
       </div>
     </section>
-    <div class="zoom-panel" aria-label="Contrôles de zoom">
-      <button id="zoom-out" aria-label="Dézoomer">-</button>
-      <input id="zoom-range" type="range" min="40" max="150" step="5" value="100" aria-label="Zoom" />
-      <button id="zoom-in" aria-label="Zoomer">+</button>
-      <button id="fit-map" class="ghost" aria-label="Adapter à l'écran">Ajuster</button>
+    <div class="zoom-panel" aria-label="Contrôles de zoom" data-i18n-aria-label="zoomPanelAriaLabel">
+      <button id="zoom-out" aria-label="Dézoomer" data-i18n-aria-label="zoomOutAriaLabel">-</button>
+      <input id="zoom-range" type="range" min="40" max="150" step="5" value="100" aria-label="Zoom" data-i18n-aria-label="zoomRangeAriaLabel" />
+      <button id="zoom-in" aria-label="Zoomer" data-i18n-aria-label="zoomInAriaLabel">+</button>
+      <button id="fit-map" class="ghost" aria-label="Adapter à l'écran" data-i18n="fitMap" data-i18n-aria-label="fitMapAriaLabel">Ajuster</button>
       <div id="zoom-value" class="zoom-value">100%</div>
     </div>
   </main>
 
   <footer class="footer">
-    <div>Outil Mindmap Impact Mapping</div>
-    <div class="version">Version 1.9.20</div>
+    <div data-i18n="footerLabel">Outil Mindmap Impact Mapping</div>
+    <div class="version">Version 1.9.21</div>
   </footer>
 
   <script src="script.js"></script>

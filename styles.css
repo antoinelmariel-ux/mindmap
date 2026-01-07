@@ -50,6 +50,12 @@ body {
   font-weight: 700;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .map-controls {
   display: flex;
   align-items: center;
@@ -73,6 +79,22 @@ body {
 }
 
 #map-selector:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
+}
+
+.lang-toggle {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  font-weight: 700;
+  background: #ffffff;
+  color: #111827;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.lang-toggle:focus {
   outline: 2px solid rgba(59, 130, 246, 0.35);
   outline-offset: 2px;
 }
