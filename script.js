@@ -185,11 +185,11 @@ const templateStates = {};
 let selectedId = null;
 let collapsed = new Set();
 let tagOptions = [
-  'Corruption active',
-  'corruption passive',
-  "trafic d'influence actif",
-  'favoritisme',
-  "prise illégale d'intérêt",
+  'Corruption directe',
+  'Corruption indirecte',
+  "Trafic d'influence",
+  'Favoritisme',
+  "Prise illégale d'intérêt",
 ];
 const credibilityOptions = ['Haute', 'Moyenne', 'Faible'];
 let tierCategoryOptions = [
